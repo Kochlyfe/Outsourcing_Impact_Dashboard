@@ -777,8 +777,11 @@ df <- df[complete.cases(df$CLA_Priv),]
 df$CLA_P2yrs_PERCENTminus <- 100-as.numeric(df$CLA_P2yrs_PERCENT)
 
 #save data
-#write.csv(df,"Data/placement_data_final.csv")
+write.csv(df,"C:/Users/bengo/OneDrive - Nexus365/GitHub/Outsourcing_Impact_Dashboard/Data/dashboard_LA_data.csv")
 #ffs <- df %>% dplyr::group_by(New_geog_code, year) %>%mutate(nobs=n())%>%dplyr::filter(nobs>1)
+dflong <- df %>% pivot_longer(cols=!c(geog_n, year, LAD19NM, New_geog_code), names_to = "Variable", values_to = "Value", values_transform = list(Value = as.character))
+
+write.csv(dflong,"C:/Users/bengo/OneDrive - Nexus365/GitHub/Outsourcing_Impact_Dashboard/Data/dashboard_LA_data_long.csv")
 
 ####ANALYSIS####
 ####Pretty Graphs####
