@@ -14,6 +14,8 @@ from datetime import datetime, timedelta
 
 import chart_studio.plotly as py
 import dash_bootstrap_components as dbc
+import plotly.express as px
+
 
 
 
@@ -32,8 +34,170 @@ import plotly.colors as colors
 la_df.sort_values(by='geog_n', ascending=False, inplace=True)
 
 
+import geopandas as gpd
+df2021 = la_df[la_df['year'] == 2021]
 
 
+
+# Rename columns
+uaboundaries = gpd.read_file("https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Counties_and_Unitary_Authorities_December_2019_FCB_UK_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson")
+uaboundaries = uaboundaries.rename(columns={"ctyua19cd": "New_geog_code", "ctyua19nm": "lad19nm", "ctyua19nmw": "lad19nmw"})
+
+# Filter out unwanted data
+uaboundaries = uaboundaries[~uaboundaries["lad19nm"].isin(["Wales", "Scotland"])]
+uaboundaries = uaboundaries[uaboundaries["New_geog_code"].str.startswith('E')]
+
+df2021 = df2021[['New_geog_code','geog_n','CLA_Mar', 'per_for_profit', 'Private_spend', 'Total_spend']]
+
+
+merged = uaboundaries.set_index('New_geog_code').join(df2021.set_index('New_geog_code'))
+#merged = merged.reset_index()
+#merged.head()
+
+
+#customdata = np.stack((df2021['geog_n'], df2021['CLA_Mar'], df2021['per_for_profit'], df2021['Private_spend'], df2021['Total_spend']), axis=-1)
+
+merged = merged.dropna(subset=['geog_n'])
+
+min_value = merged['per_for_profit'].min()
+max_value = merged['per_for_profit'].max()
+scaled_values = ((merged['per_for_profit'] - min_value) / (max_value - min_value)) ** 1.2 * 15
+
+
+map = px.choropleth_mapbox(merged, geojson=merged.geometry, locations=merged.index, color='per_for_profit',
+                            color_continuous_scale="rdbu_r", center={"lat": 52.3781, "lon": 1.4360},
+                            custom_data=['geog_n','CLA_Mar', 'per_for_profit', 'Private_spend', 'Total_spend'],
+                            mapbox_style='open-street-map',
+                            hover_name = 'geog_n', zoom=5)
+
+#fig.update_traces(hovertemplate='Local Authority: %{customdata[0]}<br>Number of children in care: %{customdata[1]}<br>For-profit outsourcing (percent): %{customdata[2]}<br>For-profit expenditure: %{customdata[3]}<br>Total expenditure: %{customdata[4]}')
+
+
+map.show()
+
+
+
+####outcomes####
+
+outcomes_df = la_df_long[['']]
+
+outcomes_df = outcomes_df.groupby(['year'])['mean_ch4'].mean().reset_index()
+
+##### provider bars #####
+
+# Convert date column to datetime format
+provider_df["date"] = pd.to_datetime(provider_df["Registration.date"], format="%d/%m/%Y")
+
+# Extract month and year from the date
+provider_df["month"] = provider_df["date"].dt.strftime("%m/%y")
+
+# Calculate time in months from March 1, 2023
+provider_df["time"] = (provider_df["date"] - pd.to_datetime("2023-03-01")).dt.days // 30
+
+# Filter rows with Provision.type as "Children's home" and select relevant columns
+provider_df = provider_df.loc[provider_df["Provision.type"] == "Children's home", ["time", "Sector", "URN"]].drop_duplicates()
+
+# Map Sector values to desired categories
+provider_df["Sector"] = provider_df["Sector"].map({
+    "Private": "For-profit",
+    "Local Authority": "Local Authority",
+    "Health Authority": "Local Authority",
+    "Voluntary": "Third Sector"
+})
+
+# Group by time and Sector, calculate the count (nobs), and set Sector as a categorical variable
+provider_df = provider_df.groupby(["time", "Sector"]).size().reset_index(name="nobs")
+provider_df["Sector"] = pd.Categorical(provider_df["Sector"], categories=["For-profit", "Local Authority", "Third Sector"])
+
+# Generate a DataFrame with all unique Sector values and repeated time values
+all_sectors = pd.DataFrame({"Sector": provider_df["Sector"].unique()})
+all_sectors = all_sectors.loc[all_sectors.index.repeat(158)].reset_index(drop=True)
+all_sectors["time"] = all_sectors.groupby("Sector").cumcount() - 157
+all_sectors["er"] = 1
+
+# Merge provider_df with all_sectors to fill missing combinations
+provider_df = pd.merge(all_sectors, provider_df, on=["Sector", "time"], how="left")
+provider_df["nobs"] = provider_df["nobs"].fillna(0)
+
+# Calculate cumulative sum of nobs within each Sector group
+#think this isn't working
+
+provider_df.sort_values(by='time', ascending=False, inplace=True)
+
+
+provider_df["cumulative"] = provider_df.groupby("Sector")["nobs"].cumsum()
+
+# Filter rows with time greater than -157 and set cumulative as NA for time greater than -11
+#provider_df.loc[provider_df["time"] > -157, "cumulative"] = pd.NA
+
+colors = ["#7b3294", "#c2a5cf", "#008837"]
+
+# # Create the bar graph
+# bar = px.bar(provider_df[provider_df['time'] == -157], x='Sector', y='cumulative')
+
+# # Customize the appearance with the color palette
+# bar.update_traces(marker_color=colors)
+
+# bar.update_layout(title='Cumulative Data by Sector',
+#                   xaxis_title='Sector',
+#                   yaxis_title='Cumulative',
+#                   plot_bgcolor='rgba(0,0,0,0)',
+#                   paper_bgcolor='rgba(0,0,0,0)',
+#                   font=dict(color='black'),
+#                   bargap=0.15)
+
+# # Show the graph
+# bar.show()
+
+import plotly.express as px
+import plotly.graph_objects as go
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+provider_df['time'] = provider_df['time']*-1
 
 
 
@@ -48,6 +212,10 @@ from dash.dependencies import Input, Output, State, MATCH
 
 
 app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
+
+
+
+
 
 #server = app.server
 
@@ -107,6 +275,11 @@ sidebar = html.Div(
     style=SIDEBAR_STYLE,
 )
 
+content = html.Div(id="page-content", style=CONTENT_STYLE)
+
+
+app.layout = html.Div([dcc.Location(id="url"), sidebar, content])
+
 
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def render_page_content(pathname):
@@ -151,7 +324,7 @@ def render_page_content(pathname):
         return html.Div([
             dcc.Tabs(id="page-1-tabs", value='tab-1', children=[
                 dcc.Tab(label='Outsourcing levels', value='tab-1', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Outsourcing geographies trends', value='tab-2', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Outsourcing geographies', value='tab-2', style=tab_style, selected_style=tab_selected_style),
                 dcc.Tab(label='Childrens homes expansion', value='tab-3', style=tab_style, selected_style=tab_selected_style),
             ], style=tabs_styles),
             html.Div(id='page-1-tabs-content')
@@ -201,48 +374,25 @@ def render_page_1_content(tab):
             ),
             dcc.Graph(
                 id='scatter-plot'
-            ),
-            generate_action_plan_textbox('tab-2')
-        ])
+            )        ])
     elif tab == 'tab-2':
         return html.Div([
-            html.H3('Find out where and when methane rises:'),
-            dcc.Dropdown(
-                id='state-dropdown',
-                options=sorted([{'label': StateName, 'value': StateName} for StateName in tab3_df_filtered['StateName'].unique()], key=lambda x: x['label']),
-                value=tab3_df_filtered['StateName'].unique()[0]
-            ),
-            dcc.Graph(id='map-graph', style={'height': '600px'}),
-            html.H3('Select week of the year:'),
-            dcc.Slider(
-                id='date-slider',
-                min=tab3_df_filtered['week_of_year'].min(),
-                max=tab3_df_filtered['week_of_year'].max(),
-                value=tab3_df_filtered['week_of_year'].min(),
-                marks={str(week_of_year): str(week_of_year) for week_of_year in tab3_df_filtered['week_of_year'].unique()},
-                step=None
-            ),
-            generate_action_plan_textbox('tab-3')
-        ])
+            html.H3('See levels of outsourcing in your area:'),
+            dcc.Graph(id='map',  figure=map, style={'height': '600px'})
+            ])
     elif tab == 'tab-3':
         return html.Div([
-            html.H3('Find out where and when methane rises:'),
-            dcc.Dropdown(
-                id='state-dropdown',
-                options=sorted([{'label': StateName, 'value': StateName} for StateName in tab3_df_filtered['StateName'].unique()], key=lambda x: x['label']),
-                value=tab3_df_filtered['StateName'].unique()[0]
-            ),
-            dcc.Graph(id='map-graph', style={'height': '600px'}),
-            html.H3('Select week of the year:'),
+            html.H3('Look at the rise in for-profit childrens homes'),
+            dcc.Graph(id='bar', style={'height': '600px'}),
+            html.H3('Select time period:'),
             dcc.Slider(
                 id='date-slider',
-                min=tab3_df_filtered['week_of_year'].min(),
-                max=tab3_df_filtered['week_of_year'].max(),
-                value=tab3_df_filtered['week_of_year'].min(),
-                marks={str(week_of_year): str(week_of_year) for week_of_year in tab3_df_filtered['week_of_year'].unique()},
+                min=provider_df['time'].min(),
+                max=provider_df['time'].max(),
+                value=provider_df['time'].min(),
+                marks={str(time): str(time) for time in provider_df['time'].unique()},
                 step=None
-            ),
-            generate_action_plan_textbox('tab-3')
+            )
         ])
 
 
@@ -257,16 +407,12 @@ def render_page_2_content(tab):
                 value=None,
                 placeholder='Select a cause of death'
             ),
-            dcc.Graph(id='tab4-plot'),
-            generate_action_plan_textbox('tab-4')
-
+            dcc.Graph(id='tab4-plot')
         ])
     elif tab == 'tab-5':
         return html.Div([
             html.H3('Find out which counties have high emissions and mortalities:'),
-            dcc.Graph(id='Health visualisation', figure=tab5_fig),
-            generate_action_plan_textbox('tab-5')
-
+            dcc.Graph(id='Health visualisation', figure=tab5_fig)
 
         ])
     elif tab == 'tab-6':
@@ -278,9 +424,7 @@ def render_page_2_content(tab):
                 value=None,
                 placeholder='Select a race'
             ),
-            dcc.Graph(id='tab6-plot'),
-            generate_action_plan_textbox('tab-6')
-            
+            dcc.Graph(id='tab6-plot')            
         ])
 
 
@@ -295,29 +439,8 @@ def render_page_3_content(tab):
             html.Ul([
                 html.Li(html.A("Download Methane Data with latitude and longitude", href="https://raw.githubusercontent.com/BenGoodair/Methane_Dashboard/main/methane_final_lonlat.csv")),
                 html.Li(html.A("Download Health Data for US Counties", href="https://raw.githubusercontent.com/BenGoodair/Methane_Dashboard/main/methane_final_county.csv")),
-                html.Li(html.A("Download Health Data for US States", href="https://raw.githubusercontent.com/BenGoodair/Methane_Dashboard/main/methane_final_county.csv"))]),            
-            html.H3('Data notes and licensing'),
-            html.H6('Data sources used in this dashboard'),
-            html.Ul([
-                html.Li(html.A("The Copernicus Climate Data Store provides satellite-collected methane data ", href="https://cds.climate.copernicus.eu/cdsapp#!/dataset/satellite-methane?tab=overview")),
-                html.Li(html.A("Health data comes from the Centre for Disease control and Prevention (CDC Wonder)", href="https://wonder.cdc.gov/ucd-icd10-expanded.html")),
-                html.Li(html.A("Data on energy plants and hospitals is simulated and available here", href="https://raw.githubusercontent.com/BenGoodair/Methane_Dashboard/main/simulated_data.csv"))]),            
-            html.H6('Potential Biases in data'),
-            html.P('Please consider the following when interpretting our dashboard:'),
-            html.Ul([
-                html.Li("Health data and reporting follows on from histories of colonial measurement of health - as such we should be critical of racialised categories and minoritising or othering data."),
-                html.Li("Data reflects global power hierachies and as such high-income countries are frequenlty over-represented.")]),
-            html.H6('Data licenses for use and reuse'),
-            html.P('Terms of use for the methane data are that:'),
-            html.Ul([
-                html.Li("We agree ... to inform us prior to any publication where the data products are planned to be used."),
-                html.Li("We agree ... to offer us co-authorship for any planned peer-reviewed publication based on our data products.")]),
-            html.P("Terms of use for the health data are that:"),
-            html.Ul([
-                html.Li("These data are provided for the purpose of statistical reporting and analysis only. The CDC/ATSDR Policy on Releasing and Sharing Data prohibits linking these data with other data sets or information for the purpose of identifying an individual."),
-                html.Li("The Public Health Service Act (42 U.S.C. 242m(d)) provides that the data collected by the National Center for Health Statistics (NCHS) may be used only for the purpose for which they were obtained; any effort to determine the identity of any reported cases, or to use the information for any purpose other than for statistical reporting and analysis, is against the law.")])
-
-        ])
+                html.Li(html.A("Download Health Data for US States", href="https://raw.githubusercontent.com/BenGoodair/Methane_Dashboard/main/methane_final_county.csv"))])  
+         ])
 
 
 
@@ -341,10 +464,32 @@ def update_scatter_plot(selected_county):
     return fig
 
 
+# Create a separate DataFrame for x-axis categories
+sectors = provider_df['Sector'].unique()
 
+sectors = provider_df['Sector'].unique()
 
+@app.callback(Output('bar', 'figure'), [Input('date-slider', 'value')])
+def update_bar_graph(selected_date):
+    provider_df_filtered = provider_df[provider_df['time'] == selected_date]
+    provider_df_filtered = provider_df_filtered.sort_values(by=['Sector'], key=lambda x: x.map({sector: i for i, sector in enumerate(sectors)}))
 
+    bar = px.bar(provider_df_filtered, x='Sector', y='cumulative')
 
+    # Customize the appearance with the color palette
+    bar.update_traces(marker_color=colors)
+
+    bar.update_layout(
+        title='Cumulative Data by Sector',
+        xaxis_title='Sector',
+        yaxis_title='Cumulative',
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='black'),
+        bargap=0.15
+    )
+
+    return bar
 if __name__ == '__main__':
     app.run_server(host='localhost',port=8005)
 
