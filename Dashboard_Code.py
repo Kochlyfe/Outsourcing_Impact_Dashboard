@@ -391,7 +391,7 @@ def render_page_1_content(tab):
                 min=provider_df['time'].min(),
                 max=provider_df['time'].max(),
                 value=provider_df['time'].min(),
-                marks={str(time): (str(2005 + (provider_df['time'].min() - int(time)) // 12) if (int(time) - provider_df['time'].min()) % 12 == 0 else '')
+                marks={str(time): (str(2005 - (provider_df['time'].min() - int(time)) // 12) if (int(time) - provider_df['time'].min()) % 12 == 0 else '')
                     for time in provider_df['time'].unique()},
                 step=None,
                 drag_value=True  # Enable dragging the slider handle smoothly
@@ -468,12 +468,6 @@ def update_scatter_plot(selected_county):
 
 # Create a separate DataFrame for x-axis categories
 sectors = provider_df['Sector'].unique()
-
-# Create a dictionary to map the time values to formatted labels
-slider_labels = {
-    time: (datetime(2022, 1, 1) + timedelta(days=int(-30 * time))).strftime('%b %Y') 
-    for time in provider_df['time'].unique()
-}
 
 
 @app.callback(Output('bar', 'figure'), [Input('date-slider', 'value')])
