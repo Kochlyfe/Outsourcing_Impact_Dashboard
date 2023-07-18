@@ -37,6 +37,7 @@ from plotly.colors import sequential
 
 la_df = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/Outsourcing_Impact_Dashboard/main/Data/dashboard_LA_data.csv")
 la_df_long = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/Outsourcing_Impact_Dashboard/main/Data/dashboard_LA_data_long.csv")
+
 # alter the mh ID to be "mental health"
 import pandas as pd
 import plotly.graph_objects as go
@@ -412,14 +413,18 @@ def render_page_2_content(tab):
     if tab == 'tab-4':
         return  html.Div([
             html.H3('See the changes to outcomes for children in care over time in your area:'),
+            html.Hr(),
             html.H6('Select a Local Authority:'),
+            html.Hr(),
             dcc.Dropdown(
                 id='LA_dropdown2',
                 options=[{'label': geog_n, 'value': geog_n} for geog_n in la_df_long['geog_n'].unique()],
                 value=None,
                 placeholder='Select a Local Authority'
             ),
+            html.Hr(),
             html.H6('Select an outcome:'),
+            html.Hr(),
             dcc.Dropdown(
                 id='variable-dropdown',
                 options=[{'label': Variable, 'value': Variable} for Variable in la_df_long['Variable'].unique()],
