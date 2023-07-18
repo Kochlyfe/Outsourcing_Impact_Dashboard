@@ -16,6 +16,18 @@ import chart_studio.plotly as py
 import dash_bootstrap_components as dbc
 import plotly.express as px
 
+import plotly.express as px
+from plotly.colors import sequential
+
+
+# Define a custom color scale with more variations, ending in red
+custom_color_scale = [
+    (i, color) for i, color in zip(
+        range(0, 110, 10),
+        sequential.Viridis
+    )
+] + [(100, 'red')]  # Red for the highest value
+
 
 
 
@@ -30,13 +42,13 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.colors as colors
 
-la_df.sort_values(by='geog_n', ascending=False, inplace=True)
+la_df.sort_values(by='geog_n', ascending=True, inplace=True)
 
 
 import geopandas as gpd
 df2021 = la_df[la_df['year'] == 2021]
 
-df2021['New_geog_code'] = df2021['New_geog_code'].replace('E06000060', 'E06000002')
+df2021.loc[df2021['New_geog_code'] == 'E06000060', 'New_geog_code'] = 'E10000002'
 
 # Rename columns
 uaboundaries = gpd.read_file("https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Counties_and_Unitary_Authorities_December_2019_GCB_UK_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson")
@@ -60,16 +72,19 @@ merged = merged.dropna(subset=['geog_n'])
 
 min_value = merged['per_for_profit'].min()
 max_value = merged['per_for_profit'].max()
-scaled_values = ((merged['per_for_profit'] - min_value) / (max_value - min_value)) ** 1.2 * 15
+
+merged['Private_spend'] = merged['Private_spend'] / 1000000
+
+merged = merged.round(decimals=2)
 
 
 map = px.choropleth_mapbox(merged, geojson=merged.geometry, locations=merged.index, color='per_for_profit',
-                            color_continuous_scale="rdbu_r", center={"lat": 52.9781, "lon": -1.82360},
+                            color_continuous_scale='ylorrd', center={"lat": 52.9781, "lon": -1.82360},
                             custom_data=['geog_n','CLA_Mar', 'per_for_profit', 'Private_spend', 'Total_spend'],
                             mapbox_style='open-street-map',
                             hover_name = 'geog_n', zoom=6)
 
-map.update_traces(hovertemplate='Local Authority: %{customdata[0]}<br>Number of children in care: %{customdata[1]}<br>For-profit outsourcing (percent): %{customdata[2]}<br>For-profit expenditure: %{customdata[3]}<br>Total expenditure: %{customdata[4]}')
+map.update_traces(hovertemplate='Local Authority: %{customdata[0]}<br>Number of children in care: %{customdata[1]}<br>Percent of children in FP placement: %{customdata[2]}<br>Total expenditure (Ms): %{customdata[4]}<br>For-profit expenditure (Ms): %{customdata[3]}')
 
 #map.show()
  
@@ -154,8 +169,6 @@ colors = ["#D20E46", "#EABB0E", "#C7F00E"]
 
 import plotly.express as px
 import plotly.graph_objects as go
-
-
 
 
 
@@ -403,12 +416,18 @@ def render_page_2_content(tab):
         return  html.Div([
             html.H3('See the increasing risk of death from methane exposure and related causes:'),
             dcc.Dropdown(
-                id='death-type-dropdown',
-                options=[{'label': death, 'value': death} for death in tab4_df['ID'].unique()],
+                id='LA_dropdown2',
+                options=[{'label': geog_n, 'value': geog_n} for geog_n in la_df_long['geog_n'].unique()],
                 value=None,
-                placeholder='Select a cause of death'
+                placeholder='Select a Local Authority'
             ),
-            dcc.Graph(id='tab4-plot')
+            dcc.Dropdown(
+                id='variable-dropdown',
+                options=[{'label': Variable, 'value': Variable} for Variable in la_df_long['Variable'].unique()],
+                value=None,
+                placeholder='Select a Variable'
+            ),
+            dcc.Graph(id='double-drop')
         ])
     elif tab == 'tab-5':
         return html.Div([
@@ -453,7 +472,8 @@ def update_scatter_plot(selected_county):
     else:
         filtered_df = la_df[la_df['geog_n'] == selected_county]
 
-    fig = px.scatter(filtered_df, x='year', y='per_for_profit', color='per_for_profit', trendline='lowess')
+    fig = px.scatter(filtered_df, x='year', y='per_for_profit', color='per_for_profit', trendline='lowess',
+                     color_continuous_scale='ylorrd')
     fig.update_traces(marker=dict(size=5))
     fig.update_layout(
         xaxis_title='Year',
@@ -495,6 +515,34 @@ def update_bar_graph(selected_date):
     )
 
     return bar
+
+
+
+@app.callback(Output('double-drop', 'figure'), [Input('LA-dropdown2', 'value'), Input('variable-dropdown', 'value')])
+def update_scatter_plot(selected_county, selected_variable):
+    if selected_county is None:
+        filtered_df_dd = la_df_long[['geog_n','year' ,'per_for_profit']]
+    else:
+        filtered_df_dd = la_df_long[la_df_long['geog_n'] == selected_county]
+
+    if selected_variable is None:
+        filtered_df_dd = la_df_long[la_df_long['Variable'] == 'CLA_Mar']
+    else:
+        filtered_df_dd = la_df_long[la_df_long['Variable'] == selected_variable]
+
+
+
+    fig_dd = px.scatter(filtered_df_dd, x='year', y='Value', color='Value', trendline='lowess',
+                     color_continuous_scale='ylorrd')
+    fig_dd.update_traces(marker=dict(size=5))
+    fig_dd.update_layout(
+        xaxis_title='Year',
+        yaxis_title='Value',
+        title='Children in care outcomes 2011-22',
+        coloraxis_colorbar=dict(title='Value')
+    )
+    
+    return fig_dd
 
 
 if __name__ == '__main__':
