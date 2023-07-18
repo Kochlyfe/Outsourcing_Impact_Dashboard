@@ -585,7 +585,7 @@ rm(list=setdiff(ls(), "df"))
  ud10 <- read.csv("Data/health_UD_2010.csv")
  ud11 <- read.csv("Data/health_UD_2011.csv")
  ud12 <- read.csv("Data/health_UD_2012.csv")
-# 
+ 
  checks13 <- read.csv("Data/healthchecks_2013.csv")
  checks14 <- read.csv("Data/healthchecks_2014.csv")
  
@@ -618,7 +618,6 @@ rm(list=setdiff(ls(), "df"))
  sdq11$geog_n <-  gsub('&','and',sdq11$geog_n)
  ud12$geog_n <-  gsub('&','and',ud12$geog_n)
  sdq12$geog_n <-  gsub('&','and',sdq12$geog_n)
- df$geog_n <-  gsub('&','and',df$geog_n)
  
  ud10$geog_n <-  toupper(ud10$geog_n)
  ud11$geog_n <-  toupper(ud11$geog_n)
@@ -626,7 +625,6 @@ rm(list=setdiff(ls(), "df"))
  sdq11$geog_n <-  toupper(sdq11$geog_n)
  sdq12$geog_n <-  toupper(sdq12$geog_n)
  ud12$geog_n <-  toupper(ud12$geog_n)
- df$geog_n <-  toupper(df$geog_n)
  
  ud10$geog_n[ud10$geog_n!="CITY OF LONDON"] <-  gsub('CITY','',ud10$geog_n[ud10$geog_n!="CITY OF LONDON"])
  sdq10$geog_n[sdq10$geog_n!="CITY OF LONDON"] <-  gsub('CITY','',sdq10$geog_n[sdq10$geog_n!="CITY OF LONDON"])
@@ -634,7 +632,6 @@ rm(list=setdiff(ls(), "df"))
  sdq11$geog_n[sdq11$geog_n!="CITY OF LONDON"] <-  gsub('CITY','',sdq11$geog_n[sdq11$geog_n!="CITY OF LONDON"])
  ud12$geog_n[ud12$geog_n!="CITY OF LONDON"] <-  gsub('CITY','',ud12$geog_n[ud12$geog_n!="CITY OF LONDON"])
  sdq12$geog_n[sdq12$geog_n!="CITY OF LONDON"] <-  gsub('CITY','',sdq12$geog_n[sdq12$geog_n!="CITY OF LONDON"])
- df$geog_n[df$geog_n!="CITY OF LONDON"] <-  gsub('CITY','',df$geog_n[df$geog_n!="CITY OF LONDON"])
  
  ud10$geog_n[ud10$geog_n!="CITY OF LONDON"] <-  gsub('OF','',ud10$geog_n[ud10$geog_n!="CITY OF LONDON"])
  sdq10$geog_n[sdq10$geog_n!="CITY OF LONDON"] <-  gsub('OF','',sdq10$geog_n[sdq10$geog_n!="CITY OF LONDON"])
@@ -642,7 +639,6 @@ rm(list=setdiff(ls(), "df"))
  sdq11$geog_n[sdq11$geog_n!="CITY OF LONDON"] <-  gsub('OF','',sdq11$geog_n[sdq11$geog_n!="CITY OF LONDON"])
  ud12$geog_n[ud12$geog_n!="CITY OF LONDON"] <-  gsub('OF','',ud12$geog_n[ud12$geog_n!="CITY OF LONDON"])
  sdq12$geog_n[sdq12$geog_n!="CITY OF LONDON"] <-  gsub('OF','',sdq12$geog_n[sdq12$geog_n!="CITY OF LONDON"])
- df$geog_n[df$geog_n!="CITY OF LONDON"] <-  gsub('OF','',df$geog_n[df$geog_n!="CITY OF LONDON"])
  
  
  ud10$geog_n <-  gsub('ROYAL BOROUGH','',ud10$geog_n)
@@ -651,7 +647,6 @@ rm(list=setdiff(ls(), "df"))
  sdq11$geog_n <-  gsub('ROYAL BOROUGH','',sdq11$geog_n)
  ud12$geog_n <-  gsub('ROYAL BOROUGH','',ud12$geog_n)
  sdq12$geog_n <-  gsub('ROYAL BOROUGH','',sdq12$geog_n)
- df$geog_n <-  gsub('ROYAL BOROUGH','',df$geog_n)
  
  ud10$geog_n <-  gsub('[[:punct:] ]+',' ',ud10$geog_n)
  sdq10$geog_n <-  gsub('[[:punct:] ]+',' ',sdq10$geog_n)
@@ -659,7 +654,6 @@ rm(list=setdiff(ls(), "df"))
  sdq11$geog_n <-  gsub('[[:punct:] ]+',' ',sdq11$geog_n)
  ud12$geog_n <-  gsub('[[:punct:] ]+',' ',ud12$geog_n)
  sdq12$geog_n <-  gsub('[[:punct:] ]+',' ',sdq12$geog_n)
- df$geog_n <-  gsub('[[:punct:] ]+',' ',df$geog_n)
  
  
  ud10$geog_n <-  str_trim(ud10$geog_n)
@@ -668,7 +662,6 @@ rm(list=setdiff(ls(), "df"))
  sdq11$geog_n <-  str_trim(sdq11$geog_n)
  sdq12$geog_n <-  str_trim(sdq12$geog_n)
  ud12$geog_n <-  str_trim(ud12$geog_n)
- df$geog_n <-  str_trim(df$geog_n)
  
  ud10$geog_n[ud10$geog_n=="BLACKBURN AND DARWIN"] <- "BLACKBURN WITH DARWEN"
  ud10$geog_n[ud10$geog_n=="STOKE"] <- "STOKE ON TRENT"
@@ -720,6 +713,152 @@ rm(list=setdiff(ls(), "df"))
  sdq16$year <- 2016
  sdq17$year <- 2017
  
+ names(sdq10)[names(sdq10)=="Total.number.of.eligible.children"] <- "CLA_Total ages 5 to 16 years"
+ names(sdq11)[names(sdq11)=="Total.number.of.eligible.children.1"] <- "CLA_Total ages 5 to 16 years"
+ names(sdq12)[names(sdq12)=="Total.number.of.eligible.children.2"] <- "CLA_Total ages 5 to 16 years"
+ names(sdq13)[names(sdq13)=="Number.of.children.looked.after.for.at.least.12.months.aged.5.to.161"] <- "CLA_Total ages 5 to 16 years"
+ names(sdq14)[names(sdq14)=="Number.of.children.looked.after.for.at.least.12.months.aged.5.to.161.1"] <- "CLA_Total ages 5 to 16 years"
+ names(sdq15)[names(sdq15)=="CLA_5to16"] <- "CLA_Total ages 5 to 16 years"
+ names(sdq16)[names(sdq16)=="CLA_5to16"] <- "CLA_Total ages 5 to 16 years"
+ names(sdq17)[names(sdq17)=="OC2_5to16"] <- "CLA_Total ages 5 to 16 years"
+ 
+ names(sdq10)[names(sdq10)=="Number.of.eligible.children.with.an.SDQ.score"] <- "CLA_SDQ score was received"
+ names(sdq11)[names(sdq11)=="Number.of.eligible.children.with.an.SDQ.score.1"] <- "CLA_SDQ score was received"
+ names(sdq12)[names(sdq12)=="Number.of.eligible.children.with.an.SDQ.score.2"] <- "CLA_SDQ score was received"
+ names(sdq13)[names(sdq13)=="Number.of.children.looked.after.for.at.least.12.months.aged.5.to.16.with.an.SDQ.score2"] <- "CLA_SDQ score was received"
+ names(sdq14)[names(sdq14)=="Number.of.children.looked.after.for.at.least.12.months.aged.5.to.16.with.an.SDQ.score2.1"] <- "CLA_SDQ score was received"
+ names(sdq15)[names(sdq15)=="CLA_SDQ"] <- "CLA_SDQ score was received"
+ names(sdq16)[names(sdq16)=="CLA_SDQ"] <- "CLA_SDQ score was received"
+ names(sdq17)[names(sdq17)=="OC2_SDQ"] <- "CLA_SDQ score was received"
+ 
+ 
+ names(sdq10)[names(sdq10)=="Normal"] <- "CLA_SDQ score is normal"
+ names(sdq11)[names(sdq11)=="Normal.1"] <- "CLA_SDQ score is normal"
+ names(sdq12)[names(sdq12)=="Normal.2"] <- "CLA_SDQ score is normal"
+ names(sdq13)[names(sdq13)=="Normal"] <- "CLA_SDQ score is normal"
+ names(sdq14)[names(sdq14)=="Normal.1"] <- "CLA_SDQ score is normal"
+ names(sdq15)[names(sdq15)=="CLA_SDQnormal"] <- "CLA_SDQ score is normal"
+ names(sdq16)[names(sdq16)=="CLA_SDQnormal"] <- "CLA_SDQ score is normal"
+ names(sdq17)[names(sdq17)=="OC2_SDQnormal"] <- "CLA_SDQ score is normal"
+ 
+ names(sdq10)[names(sdq10)=="Borderline"] <- "CLA_SDQ score is borderline"
+ names(sdq11)[names(sdq11)=="Borderline.1"] <- "CLA_SDQ score is borderline"
+ names(sdq12)[names(sdq12)=="Borderline.2"] <- "CLA_SDQ score is borderline"
+ names(sdq13)[names(sdq13)=="Borderline"] <- "CLA_SDQ score is borderline"
+ names(sdq14)[names(sdq14)=="Borderline.1"] <- "CLA_SDQ score is borderline"
+ names(sdq15)[names(sdq15)=="CLA_SDQborderline"] <- "CLA_SDQ score is borderline"
+ names(sdq16)[names(sdq16)=="CLA_SDQborderline"] <- "CLA_SDQ score is borderline"
+ names(sdq17)[names(sdq17)=="OC2_SDQborderline"] <- "CLA_SDQ score is borderline"
+ 
+ names(sdq10)[names(sdq10)=="Concern"] <- "CLA_SDQ score is a cause for concern"
+ names(sdq11)[names(sdq11)=="Concern.1"] <- "CLA_SDQ score is a cause for concern"
+ names(sdq12)[names(sdq12)=="Concern.2"] <- "CLA_SDQ score is a cause for concern"
+ names(sdq13)[names(sdq13)=="Concern"] <- "CLA_SDQ score is a cause for concern"
+ names(sdq14)[names(sdq14)=="Concern.1"] <- "CLA_SDQ score is a cause for concern"
+ names(sdq15)[names(sdq15)=="CLA_SDQconcern"] <- "CLA_SDQ score is a cause for concern"
+ names(sdq16)[names(sdq16)=="CLA_SDQconcern"] <- "CLA_SDQ score is a cause for concern"
+ names(sdq17)[names(sdq17)=="OC2_SDQconcern"] <- "CLA_SDQ score is a cause for concern"
+ 
+ 
+ names(sdq10)[names(sdq10)=="Average.score.per.child7"] <- "CLA_SDQ average score"
+ names(sdq11)[names(sdq11)=="Average.score.per.child7.1"] <- "CLA_SDQ average score"
+ names(sdq12)[names(sdq12)=="Average.score.per.child7.2"] <- "CLA_SDQ average score"
+ names(sdq13)[names(sdq13)=="Average.score.per.child3"] <- "CLA_SDQ average score"
+ names(sdq14)[names(sdq14)=="Average.score.per.child3.1"] <- "CLA_SDQ average score"
+ sdq15$`CLA_SDQ average score` <- NA
+ sdq16$`CLA_SDQ average score` <- NA
+ names(sdq17)[names(sdq17)=="OC2_SDQaverage"] <- "CLA_SDQ average score"
+ 
+ 
+ names(sdq10)[names(sdq10)=="Number.of.children.with.cautions.or.conviction"] <- "CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year"
+ names(sdq11)[names(sdq11)=="Number.of.children.looked.after.with.cautions.or.conviction"] <- "CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year"
+ names(sdq12)[names(sdq12)=="caution_conviction"] <- "CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year"
+ names(sdq13)[names(sdq13)=="Number.convicted.or.subject.to.a.final.warning.or.reprimand.during.the.year4"] <- "CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year"
+ names(sdq14)[names(sdq14)=="Number.convicted.or.subject.to.a.final.warning.or.reprimand.during.the.year4"] <- "CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year"
+ names(sdq15)[names(sdq15)=="CLA_convicted"] <- "CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year"
+ names(sdq16)[names(sdq16)=="CLA_convicted"] <- "CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year"
+ names(sdq17)[names(sdq17)=="OC2_convicted"] <- "CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year"
+ 
+ names(sdq10)[names(sdq10)=="Number.of.children.looked.after.continuously.for.12.months.aged.10.or.over.at.31.March"] <- "CLA_Total ages 10 to 17 years"
+ names(sdq11)[names(sdq11)=="Number.of.children.looked.after.continuously.for.12.months.aged.10.or.over.at.31.March"] <- "CLA_Total ages 10 to 17 years"
+ names(sdq12)[names(sdq12)=="CLA_12_months_2012_10plus"] <- "CLA_Total ages 10 to 17 years"
+ names(sdq13)[names(sdq13)=="Number.of.looked.after.children.aged.10.or.older.at.31.March3"] <- "CLA_Total ages 10 to 17 years"
+ names(sdq14)[names(sdq14)=="Number.of.looked.after.children.aged.10.or.older.at.31.March3"] <- "CLA_Total ages 10 to 17 years"
+ names(sdq15)[names(sdq15)=="CLA_10over"] <- "CLA_Total ages 10 to 17 years"
+ names(sdq16)[names(sdq16)=="CLA_10over"] <- "CLA_Total ages 10 to 17 years"
+ names(sdq17)[names(sdq17)=="OC2_10to17"] <- "CLA_Total ages 10 to 17 years"
+ 
+ names(sdq10)[names(sdq10)=="Number.of.children.aged.5.or.under.who.development.assessment.were.up.to.date"] <- "CLA_Development assessments up to date"
+ names(sdq11)[names(sdq11)=="Number.of.children.aged.5.or.under.who.development.assessment.were.up.to.date"] <- "CLA_Development assessments up to date"
+ names(sdq12)[names(sdq12)=="dev_assess"] <- "CLA_Development assessments up to date"
+ names(sdq13)[names(sdq13)=="Number.of.these.children.whose.development.assessments.were.up.to.date5"] <- "CLA_Development assessments up to date"
+ names(sdq14)[names(sdq14)=="Number.of.these.children.whose.development.assessments.were.up.to.date5"] <- "CLA_Development assessments up to date"
+ names(sdq15)[names(sdq15)=="CLA_devassmt"] <- "CLA_Development assessments up to date"
+ names(sdq16)[names(sdq16)=="CLA_devassmt"] <- "CLA_Development assessments up to date"
+ names(sdq17)[names(sdq17)=="OC2_devassmt"] <- "CLA_Development assessments up to date"
+ 
+ names(sdq10)[names(sdq10)=="Number.of.children.looked.after.continuously.for.12.months.aged.5.or.under.at.31.March.2010"] <- "CLA_Total ages 0 to 4 years"
+ names(sdq11)[names(sdq11)=="Number.of.children.looked.after.continuously.for.12.months.aged.5.or.under.at.31.March.2011"] <- "CLA_Total ages 0 to 4 years"
+ names(sdq12)[names(sdq12)=="CLA_12_months_2012_5under"] <- "CLA_Total ages 0 to 4 years"
+ names(sdq13)[names(sdq13)=="Number.of.children.who.had.been.looked.after.for.at.least.12.months..and.aged.5.or.younger.at.31.March.2013"] <- "CLA_Total ages 0 to 4 years"
+ names(sdq14)[names(sdq14)=="Number.of.children.who.had.been.looked.after.for.at.least.12.months..and.aged.5.or.younger.at.31.March.2014"] <- "CLA_Total ages 0 to 4 years"
+ names(sdq15)[names(sdq15)=="CLA_5under"] <- "CLA_Total ages 0 to 4 years"
+ names(sdq16)[names(sdq16)=="CLA_under5"] <- "CLA_Total ages 0 to 4 years"
+ names(sdq17)[names(sdq17)=="OC2_U5"] <- "CLA_Total ages 0 to 4 years"
+ 
+ names(sdq10)[names(sdq10)=="Number.of.children.whose.health.assessments.were.up.to.date"] <- "CLA_Had their annual health assessment"
+ names(sdq11)[names(sdq11)=="Number.whose.health.assessments.were.up.to.date"] <- "CLA_Had their annual health assessment"
+ names(sdq12)[names(sdq12)=="health_assess"] <- "CLA_Had their annual health assessment"
+ names(sdq13)[names(sdq13)=="Number.of.children.who.had.their.annual.health.assessment4"] <- "CLA_Had their annual health assessment"
+ names(sdq14)[names(sdq14)=="Number.of.children.who.had.their.annual.health.assessment4"] <- "CLA_Had their annual health assessment"
+ names(sdq15)[names(sdq15)=="CLA_healthassmt"] <- "CLA_Had their annual health assessment"
+ names(sdq16)[names(sdq16)=="CLA_healthassmt"] <- "CLA_Had their annual health assessment"
+ names(sdq17)[names(sdq17)=="OC2_healthassmt"] <- "CLA_Had their annual health assessment"
+ 
+ names(sdq10)[names(sdq10)=="Number.of.children.who.immunisations.were.up.to.date"] <- "CLA_Had their immunisations up to date"
+ names(sdq11)[names(sdq11)=="Number.whose.immunisations.were.up.to.date"] <- "CLA_Had their immunisations up to date"
+ names(sdq12)[names(sdq12)=="immunisations"] <- "CLA_Had their immunisations up to date"
+ names(sdq13)[names(sdq13)=="Number.of.children.whose.immunisations.were.up.to.date2"] <- "CLA_Had their immunisations up to date"
+ names(sdq14)[names(sdq14)=="Number.of.children.whose.immunisations.were.up.to.date2"] <- "CLA_Had their immunisations up to date"
+ names(sdq15)[names(sdq15)=="CLA_immunisation"] <- "CLA_Had their immunisations up to date"
+ names(sdq16)[names(sdq16)=="CLA_immunisation"] <- "CLA_Had their immunisations up to date"
+ names(sdq17)[names(sdq17)=="OC2_immunisation"] <- "CLA_Had their immunisations up to date"
+ 
+ names(sdq10)[names(sdq10)=="Number.of.children.whose.teeth.were.checked.by.a.dentist"] <- "CLA_Had their teeth checked by a dentist"
+ names(sdq11)[names(sdq11)=="Number.whose.teeth.were.checked.by.a.dentist"] <- "CLA_Had their teeth checked by a dentist"
+ names(sdq12)[names(sdq12)=="teeth_check"] <- "CLA_Had their teeth checked by a dentist"
+ names(sdq13)[names(sdq13)=="Number.of.children.who.had.their.teeth.checked.by.a.dentist3"] <- "CLA_Had their teeth checked by a dentist"
+ names(sdq14)[names(sdq14)=="Number.of.children.who.had.their.teeth.checked.by.a.dentist3"] <- "CLA_Had their teeth checked by a dentist"
+ names(sdq15)[names(sdq15)=="CLA_teethcheck"] <- "CLA_Had their teeth checked by a dentist"
+ names(sdq16)[names(sdq16)=="CLA_teethcheck"] <- "CLA_Had their teeth checked by a dentist"
+ names(sdq17)[names(sdq17)=="OC2_teethcheck"] <- "CLA_Had their teeth checked by a dentist"
+ 
+ names(sdq10)[names(sdq10)=="Number.of.children.identified.as.having.a.substance.misuse.problem"] <- "CLA_Identified as having a substance misuse problem"
+ names(sdq11)[names(sdq11)=="Number.of.children.looked.after.identified.as.having.a.substance.misuse.problem"] <- "CLA_Identified as having a substance misuse problem"
+ names(sdq12)[names(sdq12)=="substance_misuse"] <- "CLA_Identified as having a substance misuse problem"
+ names(sdq13)[names(sdq13)=="Number.identified.as.having.a.substance.misuse.problem.during.the.year2"] <- "CLA_Identified as having a substance misuse problem"
+ names(sdq14)[names(sdq14)=="Number.identified.as.having.a.substance.misuse.problem.during.the.year2"] <- "CLA_Identified as having a substance misuse problem"
+ names(sdq15)[names(sdq15)=="CLA_submisuse"] <- "CLA_Identified as having a substance misuse problem"
+ names(sdq16)[names(sdq16)=="CLA_submisuse"] <- "CLA_Identified as having a substance misuse problem"
+ names(sdq17)[names(sdq17)=="OC2_submisuse"] <- "CLA_Identified as having a substance misuse problem"
+ 
+ names(sdq10)[names(sdq10)=="Number.of.children.offered.an.intervention.for.a.substance.problem.but.who.refused.it"] <- "CLA_Offered intervention but refused it"
+ names(sdq11)[names(sdq11)=="Number.who.were.offered.an.intervention.for.a.substance.problem.but.who.refused.it"] <- "CLA_Offered intervention but refused it"
+ names(sdq12)[names(sdq12)=="refused_intervention"] <- "CLA_Offered intervention but refused it"
+ names(sdq13)[names(sdq13)=="Number.who.were.offered.an.intervention.but.who.refused.it.during.the.year4"] <- "CLA_Offered intervention but refused it"
+ names(sdq14)[names(sdq14)=="Number.who.were.offered.an.intervention.but.who.refused.it.during.the.year4"] <- "CLA_Offered intervention but refused it"
+ names(sdq15)[names(sdq15)=="CLA_suboffint"] <- "CLA_Offered intervention but refused it"
+ names(sdq16)[names(sdq16)=="CLA_suboffint"] <- "CLA_Offered intervention but refused it"
+ names(sdq17)[names(sdq17)=="OC2_suboffint"] <- "CLA_Offered intervention but refused it"
+ 
+ names(sdq10)[names(sdq10)=="Number.of.children.who.received.an.intervention.for.a.substance.misuse.problem"] <- "CLA_Received an intervention for their substance misuse problem"
+ names(sdq11)[names(sdq11)=="Number.who.received.an.intervention.for.a.substance.misuse.problem"] <- "CLA_Received an intervention for their substance misuse problem"
+ names(sdq12)[names(sdq12)=="substance_intervention"] <- "CLA_Received an intervention for their substance misuse problem"
+ names(sdq13)[names(sdq13)=="Number.who.received.an.intervention.for.their.substance.misuse.problem.during.the.year3"] <- "CLA_Received an intervention for their substance misuse problem"
+ names(sdq14)[names(sdq14)=="Number.who.received.an.intervention.for.their.substance.misuse.problem.during.the.year3"] <- "CLA_Received an intervention for their substance misuse problem"
+ names(sdq15)[names(sdq15)=="CLA_subint"] <- "CLA_Received an intervention for their substance misuse problem"
+ names(sdq16)[names(sdq16)=="CLA_subint"] <- "CLA_Received an intervention for their substance misuse problem"
+ names(sdq17)[names(sdq17)=="OC2_subint"] <- "CLA_Received an intervention for their substance misuse problem"
  
  
  
@@ -733,15 +872,17 @@ rm(list=setdiff(ls(), "df"))
  names(sdq17)[names(sdq17)=="OC2_12mths"] <- "CLA_Total all ages"
  
  
- sdq <- rbind(sdq10[c("geog_n", "year", "CLA_Total all ages")],
-              sdq11[c("geog_n", "year", "CLA_Total all ages")],
-              sdq12[c("geog_n", "year", "CLA_Total all ages")],
-              sdq13[c("geog_n", "year", "CLA_Total all ages")],
-              sdq14[c("geog_n", "year", "CLA_Total all ages")],
-              sdq15[c("geog_n", "year", "CLA_Total all ages")],
-              sdq16[c("geog_n", "year", "CLA_Total all ages")],
-              sdq17[c("geog_n", "year", "CLA_Total all ages")],
-              cla2021convict[c("geog_n", "year", "CLA_Total all ages")])
+ sdq <- rbind(sdq10[c("geog_n", "year", "CLA_Total ages 5 to 16 years", "CLA_SDQ score was received", "CLA_SDQ score is normal","CLA_SDQ score is borderline", "CLA_SDQ score is a cause for concern", "CLA_SDQ average score", "CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year", "CLA_Total ages 10 to 17 years", "CLA_Development assessments up to date", "CLA_Total ages 0 to 4 years", "CLA_Had their annual health assessment", "CLA_Had their immunisations up to date", "CLA_Had their teeth checked by a dentist", "CLA_Identified as having a substance misuse problem","CLA_Offered intervention but refused it", "CLA_Received an intervention for their substance misuse problem","CLA_Total all ages")],
+              sdq11[c("geog_n", "year", "CLA_Total ages 5 to 16 years", "CLA_SDQ score was received", "CLA_SDQ score is normal","CLA_SDQ score is borderline", "CLA_SDQ score is a cause for concern", "CLA_SDQ average score","CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year", "CLA_Total ages 10 to 17 years", "CLA_Development assessments up to date", "CLA_Total ages 0 to 4 years", "CLA_Had their annual health assessment", "CLA_Had their immunisations up to date", "CLA_Had their teeth checked by a dentist", "CLA_Identified as having a substance misuse problem","CLA_Offered intervention but refused it", "CLA_Received an intervention for their substance misuse problem","CLA_Total all ages")],
+              sdq12[c("geog_n", "year", "CLA_Total ages 5 to 16 years", "CLA_SDQ score was received", "CLA_SDQ score is normal","CLA_SDQ score is borderline", "CLA_SDQ score is a cause for concern", "CLA_SDQ average score","CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year", "CLA_Total ages 10 to 17 years", "CLA_Development assessments up to date", "CLA_Total ages 0 to 4 years", "CLA_Had their annual health assessment", "CLA_Had their immunisations up to date", "CLA_Had their teeth checked by a dentist", "CLA_Identified as having a substance misuse problem","CLA_Offered intervention but refused it", "CLA_Received an intervention for their substance misuse problem","CLA_Total all ages")],
+              sdq13[c("geog_n", "year", "CLA_Total ages 5 to 16 years", "CLA_SDQ score was received", "CLA_SDQ score is normal","CLA_SDQ score is borderline", "CLA_SDQ score is a cause for concern", "CLA_SDQ average score","CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year", "CLA_Total ages 10 to 17 years", "CLA_Development assessments up to date", "CLA_Total ages 0 to 4 years", "CLA_Had their annual health assessment", "CLA_Had their immunisations up to date", "CLA_Had their teeth checked by a dentist", "CLA_Identified as having a substance misuse problem","CLA_Offered intervention but refused it", "CLA_Received an intervention for their substance misuse problem","CLA_Total all ages")],
+              sdq14[c("geog_n", "year", "CLA_Total ages 5 to 16 years", "CLA_SDQ score was received", "CLA_SDQ score is normal","CLA_SDQ score is borderline", "CLA_SDQ score is a cause for concern", "CLA_SDQ average score","CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year", "CLA_Total ages 10 to 17 years", "CLA_Development assessments up to date", "CLA_Total ages 0 to 4 years", "CLA_Had their annual health assessment", "CLA_Had their immunisations up to date", "CLA_Had their teeth checked by a dentist", "CLA_Identified as having a substance misuse problem","CLA_Offered intervention but refused it", "CLA_Received an intervention for their substance misuse problem","CLA_Total all ages")],
+              sdq15[c("geog_n", "year", "CLA_Total ages 5 to 16 years", "CLA_SDQ score was received", "CLA_SDQ score is normal","CLA_SDQ score is borderline", "CLA_SDQ score is a cause for concern", "CLA_SDQ average score","CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year", "CLA_Total ages 10 to 17 years", "CLA_Development assessments up to date", "CLA_Total ages 0 to 4 years", "CLA_Had their annual health assessment", "CLA_Had their immunisations up to date", "CLA_Had their teeth checked by a dentist", "CLA_Identified as having a substance misuse problem","CLA_Offered intervention but refused it", "CLA_Received an intervention for their substance misuse problem","CLA_Total all ages")],
+              sdq16[c("geog_n", "year", "CLA_Total ages 5 to 16 years", "CLA_SDQ score was received", "CLA_SDQ score is normal","CLA_SDQ score is borderline", "CLA_SDQ score is a cause for concern", "CLA_SDQ average score","CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year", "CLA_Total ages 10 to 17 years", "CLA_Development assessments up to date", "CLA_Total ages 0 to 4 years", "CLA_Had their annual health assessment", "CLA_Had their immunisations up to date", "CLA_Had their teeth checked by a dentist", "CLA_Identified as having a substance misuse problem","CLA_Offered intervention but refused it", "CLA_Received an intervention for their substance misuse problem","CLA_Total all ages")],
+              sdq17[c("geog_n", "year", "CLA_Total ages 5 to 16 years", "CLA_SDQ score was received", "CLA_SDQ score is normal","CLA_SDQ score is borderline", "CLA_SDQ score is a cause for concern", "CLA_SDQ average score","CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year", "CLA_Total ages 10 to 17 years", "CLA_Development assessments up to date", "CLA_Total ages 0 to 4 years", "CLA_Had their annual health assessment", "CLA_Had their immunisations up to date", "CLA_Had their teeth checked by a dentist", "CLA_Identified as having a substance misuse problem","CLA_Offered intervention but refused it", "CLA_Received an intervention for their substance misuse problem","CLA_Total all ages")],
+              cla2021convict[c("geog_n", "year", "CLA_Total ages 5 to 16 years", "CLA_SDQ score was received", "CLA_SDQ score is normal","CLA_SDQ score is borderline", "CLA_SDQ score is a cause for concern", "CLA_SDQ average score","CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year", "CLA_Total ages 10 to 17 years", "CLA_Development assessments up to date", "CLA_Total ages 0 to 4 years", "CLA_Had their annual health assessment", "CLA_Had their immunisations up to date", "CLA_Had their teeth checked by a dentist", "CLA_Identified as having a substance misuse problem","CLA_Offered intervention but refused it", "CLA_Received an intervention for their substance misuse problem","CLA_Total all ages")])
+ 
+ sdq$geog_n[sdq$geog_n=="BEDFORD BOROUGH"] <- "BEDFORD"
  
  df$geog_n <-  gsub('&','and',df$geog_n)
  sdq$geog_n <-  gsub('&','and',sdq$geog_n)
@@ -774,12 +915,45 @@ rm(list=setdiff(ls(), "df"))
 
 df <- df[complete.cases(df$CLA_Priv),]
 
+
+df$`CLA_SDQ score was received` <- as.numeric(df$`CLA_SDQ score was received`)
+df$`CLA_SDQ score is normal` <- as.numeric(df$`CLA_SDQ score is normal`)
+df$`CLA_SDQ score is borderline` <- as.numeric(df$`CLA_SDQ score is borderline`)
+df$`CLA_SDQ score is a cause for concern` <- as.numeric(df$`CLA_SDQ score is a cause for concern`)
+
+df$`CLA_SDQ score is normal`[df$year==2010|df$year==2011|df$year==2012|df$year==2013|df$year==2014] <- (df$`CLA_SDQ score is normal`[df$year==2010|df$year==2011|df$year==2012|df$year==2013|df$year==2014]*df$`CLA_SDQ score was received`[df$year==2010|df$year==2011|df$year==2012|df$year==2013|df$year==2014])/100
+df$`CLA_SDQ score is borderline`[df$year==2010|df$year==2011|df$year==2012|df$year==2013|df$year==2014] <- (df$`CLA_SDQ score is borderline`[df$year==2010|df$year==2011|df$year==2012|df$year==2013|df$year==2014]*df$`CLA_SDQ score was received`[df$year==2010|df$year==2011|df$year==2012|df$year==2013|df$year==2014])/100
+df$`CLA_SDQ score is a cause for concern`[df$year==2010|df$year==2011|df$year==2012|df$year==2013|df$year==2014] <- (df$`CLA_SDQ score is a cause for concern`[df$year==2010|df$year==2011|df$year==2012|df$year==2013|df$year==2014]*df$`CLA_SDQ score was received`[df$year==2010|df$year==2011|df$year==2012|df$year==2013|df$year==2014])/100
+
+
 df$CLA_P2yrs_PERCENTminus <- 100-as.numeric(df$CLA_P2yrs_PERCENT)
 
 #save data
 write.csv(df,"C:/Users/bengo/OneDrive - Nexus365/GitHub/Outsourcing_Impact_Dashboard/Data/dashboard_LA_data.csv")
 #ffs <- df %>% dplyr::group_by(New_geog_code, year) %>%mutate(nobs=n())%>%dplyr::filter(nobs>1)
-dflong <- df %>% pivot_longer(cols=!c(geog_n, year, LAD19NM, New_geog_code), names_to = "Variable", values_to = "Value", values_transform = list(Value = as.character))
+
+
+
+#df long
+
+
+
+dflong <- df %>% dplyr::mutate(per_normal = as.double(`CLA_SDQ score is normal`)/as.double(`CLA_SDQ score was received`)*100,
+                               per_concern= as.double(`CLA_SDQ score is a cause for concern`)/as.double(`CLA_SDQ score was received`)*100,
+                               per_healthcheck = as.double(`CLA_Had their annual health assessment`)/as.double(`CLA_Total all ages`)*100) %>%
+  dplyr::select(geog_n, year, LAD19NM, New_geog_code, CLA_Mar, per_less_than_2yrs, per_outside_LA, per_missing_incidents, per_away_incidents, convicted_percent, `CLA_SDQ average score`, per_concern, per_healthcheck)%>%
+  dplyr::rename(`Number of Children in Care` = CLA_Mar,
+                `Short term placements %` = per_less_than_2yrs,
+                `Out of area placements %` = per_outside_LA,
+                `Children with missing incidents %` = per_missing_incidents,
+                `Children with away incidents %` = per_away_incidents,
+                `Children criminalised %` = convicted_percent,
+                `Average mental health score (SDQ)` = `CLA_SDQ average score`,
+                `Children with concerning mental health (SDQ)` = per_concern, 
+                `Children receiving their health check (%)` = per_healthcheck) %>%
+  pivot_longer(cols=!c(geog_n, year, LAD19NM, New_geog_code), names_to = "Variable", values_to = "Value", values_transform = list(Value = as.character))
+
+dflong$Value <- as.double(dflong$Value)
 
 write.csv(dflong,"C:/Users/bengo/OneDrive - Nexus365/GitHub/Outsourcing_Impact_Dashboard/Data/dashboard_LA_data_long.csv")
 

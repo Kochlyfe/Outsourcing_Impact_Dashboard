@@ -20,13 +20,13 @@ import plotly.express as px
 from plotly.colors import sequential
 
 
-# Define a custom color scale with more variations, ending in red
-custom_color_scale = [
-    (i, color) for i, color in zip(
-        range(0, 110, 10),
-        sequential.Viridis
-    )
-] + [(100, 'red')]  # Red for the highest value
+# # Define a custom color scale with more variations, ending in red
+# custom_color_scale = [
+#     (i, color) for i, color in zip(
+#         range(0, 110, 10),
+#         sequential.Viridis
+#     )
+# ] + [(100, 'red')]  # Red for the highest value
 
 
 
@@ -304,17 +304,14 @@ def render_page_content(pathname):
             html.P("The Outsourcing Impacts Dashboard aims to provide policymakers with valuable insights into outsourcing levels and their impact on quality of social care services in England. By visualizing outsoucing levels, service quality data, and related information, this dashboard assists policymakers in making informed decisions to address the challenges posed by increasing need for social care."),
             html.H4("Key Features"),
             html.Ul([
-                html.Li("Methane Leaks: Interactive map showcasing highest methane emissions and nearby energy sites."),
-                html.Li("Rising Methane Emmissions: Graphical representations and visualizations of localised methane data trends."),
-                html.Li("Methane Map: See where and when methane emmissions are highest."),
-                html.Li("Increasing risks of methane-related health: Graphical visualisation in trends of respiratory, mental health and methane mortalities."),
-                html.Li("Counties at health-risk: Identify which counties have highest methane and worst health outcomes."),
-                html.Li("Racial impacts of methane emmissions: Graphs presenting methane-related mortalities and racial inequalities."),
-                html.Li("Links to Resources: Comprehensive list of resources, papers, and articles related to methane emissions and impacts on health."),
+                html.Li("For profit outsourcing trends: Graph showing increased number of children placed in for-profit providers."),
+                html.Li("Outsourcing Geographies: Map representations and visualizations of localised outsourcing levels."),
+                html.Li("For-profit children's homes: See a sliding visualisation of the rise of for-profit children's homes."),
+                html.Li("Children in care outcomes: Select your variable and see the trend of outcomes in your area."),
             ]),
             html.H4("How to Use"),
-            html.P("Navigate through the tabs at the sidebar to access different sections of the dashboard. Each section provides specific information and visualizations related to methane levels and health impacts. Use the interactive components to explore the data and gain insights."),
-            html.P("We encourage policymakers to utilize this dashboard as a resource for evidence-based decision-making. By considering the data, visualizations, and resources provided here, policymakers can better understand the magnitude of methane emissions and the potential health risks associated with it. Additionally, we recommend referring to the 'Links to Resources' section for further in-depth research and reports."),
+            html.P("Navigate through the tabs at the sidebar to access different sections of the dashboard. Each section provides specific information and visualizations related to outsourcing levels and its impacts. Use the interactive components to explore the data and gain insights."),
+            html.P("We encourage policymakers to utilize this dashboard as a resource for evidence-based decision-making. By considering the data, visualizations, and resources provided here, policymakers can better understand the magnitude of outsouring and the potential risks associated with it. Additionally, we recommend referring to the 'Links to Resources' section for further in-depth research and reports."),
             html.Hr(),
             html.H4("Important Note"),
             html.P("This dashboard is for informational purposes only and should not be used as the sole basis for policymaking. It is crucial to consult domain experts, conduct further analysis, and consider additional factors when making policy decisions."),
@@ -345,20 +342,20 @@ def render_page_content(pathname):
     elif pathname == "/page-2":
         return html.Div([
             dcc.Tabs(id="page-2-tabs", value='tab-4', children=[
-                dcc.Tab(label='double drop', value='tab-4', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='scatter LAs', value='tab-5', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Outcomes for children in care', value='tab-4', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Sufficiency map (out of area and residential places)', value='tab-5', style=tab_style, selected_style=tab_selected_style),
                 dcc.Tab(label='LA profiles', value='tab-6', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Relationship to outsourcing', value='tab-7', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Relationships to outsourcing', value='tab-7', style=tab_style, selected_style=tab_selected_style),
             ], style=tabs_styles),
             html.Div(id='page-2-tabs-content')
         ])
     elif pathname == "/page-3":
         return html.Div([
             dcc.Tabs(id="page-3-tabs", value='tab-8', children=[
-                dcc.Tab(label='Data download', value='tab-9', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Data upload', value='tab-10',style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Educational resources', value='tab-9', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Contact and feedback', value='tab-10', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Data download', value='tab-8', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Data upload', value='tab-9',style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Educational resources', value='tab-10', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Contact and feedback', value='tab-11', style=tab_style, selected_style=tab_selected_style),
             ], style=tabs_styles),
             html.Div(id='page-3-tabs-content')
         ])
@@ -414,13 +411,15 @@ def render_page_1_content(tab):
 def render_page_2_content(tab):
     if tab == 'tab-4':
         return  html.Div([
-            html.H3('See the increasing risk of death from methane exposure and related causes:'),
+            html.H3('See the changes to outcomes for children in care over time in your area:'),
+            html.H6('Select a Local Authority:'),
             dcc.Dropdown(
                 id='LA_dropdown2',
                 options=[{'label': geog_n, 'value': geog_n} for geog_n in la_df_long['geog_n'].unique()],
                 value=None,
                 placeholder='Select a Local Authority'
             ),
+            html.H6('Select an outcome:'),
             dcc.Dropdown(
                 id='variable-dropdown',
                 options=[{'label': Variable, 'value': Variable} for Variable in la_df_long['Variable'].unique()],
@@ -457,9 +456,7 @@ def render_page_3_content(tab):
             html.H3('Data Downloads:'),
             html.P('You can access to three different files: Data at the lat/lon scale, county scale or state scale:'),
             html.Ul([
-                html.Li(html.A("Download Methane Data with latitude and longitude", href="https://raw.githubusercontent.com/BenGoodair/Methane_Dashboard/main/methane_final_lonlat.csv")),
-                html.Li(html.A("Download Health Data for US Counties", href="https://raw.githubusercontent.com/BenGoodair/Methane_Dashboard/main/methane_final_county.csv")),
-                html.Li(html.A("Download Health Data for US States", href="https://raw.githubusercontent.com/BenGoodair/Methane_Dashboard/main/methane_final_county.csv"))])  
+                html.Li(html.A("Download Data with for LAs", href="https://raw.githubusercontent.com/BenGoodair/Outsourcing_Impact_Dashboard/main/Data/dashboard_LA_data_long.csv"))])  
          ])
 
 
@@ -518,22 +515,14 @@ def update_bar_graph(selected_date):
 
 
 
-@app.callback(Output('double-drop', 'figure'), [Input('LA-dropdown2', 'value'), Input('variable-dropdown', 'value')])
+@app.callback(Output('double-drop', 'figure'), [Input('LA_dropdown2', 'value'), Input('variable-dropdown', 'value')])
 def update_scatter_plot(selected_county, selected_variable):
     if selected_county is None:
-        filtered_df_dd = la_df_long[['geog_n','year' ,'per_for_profit']]
+        filtered_df_dd = la_df_long[la_df_long['Variable']=="Number of Children in Care"]
     else:
-        filtered_df_dd = la_df_long[la_df_long['geog_n'] == selected_county]
+        filtered_df_dd = la_df_long[(la_df_long['geog_n'] == selected_county) & (la_df_long['Variable'] == selected_variable)]
 
-    if selected_variable is None:
-        filtered_df_dd = la_df_long[la_df_long['Variable'] == 'CLA_Mar']
-    else:
-        filtered_df_dd = la_df_long[la_df_long['Variable'] == selected_variable]
-
-
-
-    fig_dd = px.scatter(filtered_df_dd, x='year', y='Value', color='Value', trendline='lowess',
-                     color_continuous_scale='ylorrd')
+    fig_dd = px.scatter(filtered_df_dd, x='year', y='Value', color='Value', trendline='lowess', color_continuous_scale='ylorrd')
     fig_dd.update_traces(marker=dict(size=5))
     fig_dd.update_layout(
         xaxis_title='Year',
@@ -543,7 +532,6 @@ def update_scatter_plot(selected_county, selected_variable):
     )
     
     return fig_dd
-
 
 if __name__ == '__main__':
     app.run_server(host='localhost',port=8005)
