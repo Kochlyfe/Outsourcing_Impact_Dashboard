@@ -36,7 +36,7 @@ la_df.sort_values(by='geog_n', ascending=False, inplace=True)
 import geopandas as gpd
 df2021 = la_df[la_df['year'] == 2021]
 
-
+df2021['New_geog_code'] = df2021['New_geog_code'].replace('E06000060', 'E06000002')
 
 # Rename columns
 uaboundaries = gpd.read_file("https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Counties_and_Unitary_Authorities_December_2019_GCB_UK_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson")
@@ -64,16 +64,15 @@ scaled_values = ((merged['per_for_profit'] - min_value) / (max_value - min_value
 
 
 map = px.choropleth_mapbox(merged, geojson=merged.geometry, locations=merged.index, color='per_for_profit',
-                            color_continuous_scale="rdbu_r", center={"lat": 52.3781, "lon": 1.4360},
+                            color_continuous_scale="rdbu_r", center={"lat": 52.9781, "lon": -1.82360},
                             custom_data=['geog_n','CLA_Mar', 'per_for_profit', 'Private_spend', 'Total_spend'],
                             mapbox_style='open-street-map',
                             hover_name = 'geog_n', zoom=6)
 
-#fig.update_traces(hovertemplate='Local Authority: %{customdata[0]}<br>Number of children in care: %{customdata[1]}<br>For-profit outsourcing (percent): %{customdata[2]}<br>For-profit expenditure: %{customdata[3]}<br>Total expenditure: %{customdata[4]}')
+map.update_traces(hovertemplate='Local Authority: %{customdata[0]}<br>Number of children in care: %{customdata[1]}<br>For-profit outsourcing (percent): %{customdata[2]}<br>For-profit expenditure: %{customdata[3]}<br>Total expenditure: %{customdata[4]}')
 
-
-map.show()
-
+#map.show()
+ 
 
 
 ####outcomes####
@@ -437,7 +436,7 @@ def render_page_3_content(tab):
     if tab == 'tab-8':
         return  html.Div([
             html.H3('Data Downloads:'),
-            html.P('You can access to three different files: Data at the lat/llon scale, county scale or state scale:'),
+            html.P('You can access to three different files: Data at the lat/lon scale, county scale or state scale:'),
             html.Ul([
                 html.Li(html.A("Download Methane Data with latitude and longitude", href="https://raw.githubusercontent.com/BenGoodair/Methane_Dashboard/main/methane_final_lonlat.csv")),
                 html.Li(html.A("Download Health Data for US Counties", href="https://raw.githubusercontent.com/BenGoodair/Methane_Dashboard/main/methane_final_county.csv")),
