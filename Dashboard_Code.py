@@ -345,7 +345,7 @@ def render_page_content(pathname):
             dcc.Tabs(id="page-2-tabs", value='tab-4', children=[
                 dcc.Tab(label='Outcomes for children in care', value='tab-4', style=tab_style, selected_style=tab_selected_style),
                 dcc.Tab(label='Sufficiency map (out of area and residential places)', value='tab-5', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='LA profiles', value='tab-6', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Comparing LA profiles', value='tab-6', style=tab_style, selected_style=tab_selected_style),
                 dcc.Tab(label='Relationships to outsourcing', value='tab-7', style=tab_style, selected_style=tab_selected_style),
             ], style=tabs_styles),
             html.Div(id='page-2-tabs-content')
