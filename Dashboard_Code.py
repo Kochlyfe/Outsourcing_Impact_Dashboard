@@ -25,7 +25,6 @@ import plotly.express as px
 
 la_df = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/Outsourcing_Impact_Dashboard/main/Data/dashboard_LA_data.csv")
 la_df_long = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/Outsourcing_Impact_Dashboard/main/Data/dashboard_LA_data_long.csv")
-provider_df = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/Outsourcing_Impact_Dashboard/main/Data/dashboard_provider_data.csv")
 # alter the mh ID to be "mental health"
 import pandas as pd
 import plotly.graph_objects as go
@@ -40,7 +39,7 @@ df2021 = la_df[la_df['year'] == 2021]
 
 
 # Rename columns
-uaboundaries = gpd.read_file("https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Counties_and_Unitary_Authorities_December_2019_FCB_UK_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson")
+uaboundaries = gpd.read_file("https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Counties_and_Unitary_Authorities_December_2019_GCB_UK_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson")
 uaboundaries = uaboundaries.rename(columns={"ctyua19cd": "New_geog_code", "ctyua19nm": "lad19nm", "ctyua19nmw": "lad19nmw"})
 
 # Filter out unwanted data
@@ -68,7 +67,7 @@ map = px.choropleth_mapbox(merged, geojson=merged.geometry, locations=merged.ind
                             color_continuous_scale="rdbu_r", center={"lat": 52.3781, "lon": 1.4360},
                             custom_data=['geog_n','CLA_Mar', 'per_for_profit', 'Private_spend', 'Total_spend'],
                             mapbox_style='open-street-map',
-                            hover_name = 'geog_n', zoom=5)
+                            hover_name = 'geog_n', zoom=6)
 
 #fig.update_traces(hovertemplate='Local Authority: %{customdata[0]}<br>Number of children in care: %{customdata[1]}<br>For-profit outsourcing (percent): %{customdata[2]}<br>For-profit expenditure: %{customdata[3]}<br>Total expenditure: %{customdata[4]}')
 
@@ -79,11 +78,13 @@ map.show()
 
 ####outcomes####
 
-outcomes_df = la_df_long[['']]
+#outcomes_df = la_df_long
 
-outcomes_df = outcomes_df.groupby(['year'])['mean_ch4'].mean().reset_index()
+#outcomes_df = outcomes_df.groupby(['year']).mean().reset_index()
 
 ##### provider bars #####
+
+provider_df = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/Outsourcing_Impact_Dashboard/main/Data/dashboard_provider_data.csv")
 
 # Convert date column to datetime format
 provider_df["date"] = pd.to_datetime(provider_df["Registration.date"], format="%d/%m/%Y")
@@ -92,7 +93,7 @@ provider_df["date"] = pd.to_datetime(provider_df["Registration.date"], format="%
 provider_df["month"] = provider_df["date"].dt.strftime("%m/%y")
 
 # Calculate time in months from March 1, 2023
-provider_df["time"] = (provider_df["date"] - pd.to_datetime("2023-03-01")).dt.days // 30
+provider_df["time"] = (provider_df["date"] - pd.to_datetime("2021-12-30")).dt.days // 30
 
 # Filter rows with Provision.type as "Children's home" and select relevant columns
 provider_df = provider_df.loc[provider_df["Provision.type"] == "Children's home", ["time", "Sector", "URN"]].drop_duplicates()
@@ -111,8 +112,8 @@ provider_df["Sector"] = pd.Categorical(provider_df["Sector"], categories=["For-p
 
 # Generate a DataFrame with all unique Sector values and repeated time values
 all_sectors = pd.DataFrame({"Sector": provider_df["Sector"].unique()})
-all_sectors = all_sectors.loc[all_sectors.index.repeat(158)].reset_index(drop=True)
-all_sectors["time"] = all_sectors.groupby("Sector").cumcount() - 157
+all_sectors = all_sectors.loc[all_sectors.index.repeat(594)].reset_index(drop=True)
+all_sectors["time"] = all_sectors.groupby("Sector").cumcount() - 593
 all_sectors["er"] = 1
 
 # Merge provider_df with all_sectors to fill missing combinations
@@ -122,15 +123,18 @@ provider_df["nobs"] = provider_df["nobs"].fillna(0)
 # Calculate cumulative sum of nobs within each Sector group
 #think this isn't working
 
-provider_df.sort_values(by='time', ascending=False, inplace=True)
+provider_df.sort_values(by='time', ascending=True, inplace=True)
 
 
 provider_df["cumulative"] = provider_df.groupby("Sector")["nobs"].cumsum()
 
-# Filter rows with time greater than -157 and set cumulative as NA for time greater than -11
-#provider_df.loc[provider_df["time"] > -157, "cumulative"] = pd.NA
 
-colors = ["#7b3294", "#c2a5cf", "#008837"]
+#print(provider_df)
+
+# Filter rows with time greater than -157 and set cumulative as NA for time greater than -11
+provider_df = provider_df[provider_df['time'] >= -211]
+
+colors = ["#D20E46", "#EABB0E", "#C7F00E"]
 
 # # Create the bar graph
 # bar = px.bar(provider_df[provider_df['time'] == -157], x='Sector', y='cumulative')
@@ -197,12 +201,12 @@ import plotly.graph_objects as go
 
 
 
-provider_df['time'] = provider_df['time']*-1
 
 
 
 ####Dashboard####
 #app = Dash(__name__)
+import json
 import dash 
 from dash import dash_table
 from dash import State
@@ -211,10 +215,7 @@ from dash.dependencies import Input, Output, State, MATCH
 
 
 
-app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
-
-
-
+app = dash.Dash(external_stylesheets=[dbc.themes.LUX,  'https://cdnjs.cloudflare.com/ajax/libs/rc-slider/9.7.2/rc-slider.min.css'])
 
 
 #server = app.server
@@ -378,7 +379,7 @@ def render_page_1_content(tab):
     elif tab == 'tab-2':
         return html.Div([
             html.H3('See levels of outsourcing in your area:'),
-            dcc.Graph(id='map',  figure=map, style={'height': '600px'})
+            dcc.Graph(id='map',  figure=map, style={'height': '1000px'})
             ])
     elif tab == 'tab-3':
         return html.Div([
@@ -390,11 +391,12 @@ def render_page_1_content(tab):
                 min=provider_df['time'].min(),
                 max=provider_df['time'].max(),
                 value=provider_df['time'].min(),
-                marks={str(time): str(time) for time in provider_df['time'].unique()},
-                step=None
+                marks={str(time): (str(2005 + (provider_df['time'].min() - int(time)) // 12) if (int(time) - provider_df['time'].min()) % 12 == 0 else '')
+                    for time in provider_df['time'].unique()},
+                step=None,
+                drag_value=True  # Enable dragging the slider handle smoothly
             )
         ])
-
 
 @app.callback(Output('page-2-tabs-content', 'children'), [Input('page-2-tabs', 'value')])
 def render_page_2_content(tab):
@@ -467,7 +469,12 @@ def update_scatter_plot(selected_county):
 # Create a separate DataFrame for x-axis categories
 sectors = provider_df['Sector'].unique()
 
-sectors = provider_df['Sector'].unique()
+# Create a dictionary to map the time values to formatted labels
+slider_labels = {
+    time: (datetime(2022, 1, 1) + timedelta(days=int(-30 * time))).strftime('%b %Y') 
+    for time in provider_df['time'].unique()
+}
+
 
 @app.callback(Output('bar', 'figure'), [Input('date-slider', 'value')])
 def update_bar_graph(selected_date):
@@ -486,13 +493,19 @@ def update_bar_graph(selected_date):
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
         font=dict(color='black'),
-        bargap=0.15
+        bargap=0.15,
+        xaxis=dict(
+            tickmode='array',
+            tickvals=list(range(len(sectors))),
+            ticktext=sectors
+        ),
     )
 
     return bar
+
+
 if __name__ == '__main__':
     app.run_server(host='localhost',port=8005)
-
 
 
 
