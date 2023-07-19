@@ -940,7 +940,8 @@ write.csv(df,"C:/Users/bengo/OneDrive - Nexus365/GitHub/Outsourcing_Impact_Dashb
 
 dflong <- df %>% dplyr::mutate(per_normal = as.double(`CLA_SDQ score is normal`)/as.double(`CLA_SDQ score was received`)*100,
                                per_concern= as.double(`CLA_SDQ score is a cause for concern`)/as.double(`CLA_SDQ score was received`)*100,
-                               per_healthcheck = as.double(`CLA_Had their annual health assessment`)/as.double(`CLA_Total all ages`)*100) %>%
+                               per_healthcheck = as.double(`CLA_Had their annual health assessment`)/as.double(`CLA_Total all ages`)*100,
+                               convicted_percent = as.double(`CLA_Convicted or subject to youth cautions, or youth conditional cautions during the year`)/as.double(`CLA_Total ages 10 to 17 years`)*100) %>%
   dplyr::select(geog_n, year, LAD19NM, New_geog_code, CLA_Mar, per_less_than_2yrs, per_outside_LA, per_missing_incidents, per_away_incidents, convicted_percent, `CLA_SDQ average score`, per_concern, per_healthcheck)%>%
   dplyr::rename(`Number of Children in Care` = CLA_Mar,
                 `Short term placements %` = per_less_than_2yrs,
