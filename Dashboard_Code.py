@@ -45,6 +45,8 @@ import plotly.colors as colors
 
 la_df.sort_values(by='geog_n', ascending=True, inplace=True)
 
+la_df['private_spend_percent'] = (la_df['Private_spend']/(la_df['Total_spend']*1000000))*100
+
 
 import geopandas as gpd
 df2021 = la_df[la_df['year'] == 2021]
@@ -228,7 +230,7 @@ from dash.dependencies import Input, Output, State, MATCH
 
 
 
-app = dash.Dash(external_stylesheets=[dbc.themes.LUX,  'https://cdnjs.cloudflare.com/ajax/libs/rc-slider/9.7.2/rc-slider.min.css'])
+app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
 
 
 #server = app.server
@@ -354,9 +356,8 @@ def render_page_content(pathname):
         return html.Div([
             dcc.Tabs(id="page-3-tabs", value='tab-8', children=[
                 dcc.Tab(label='Data download', value='tab-8', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Data upload', value='tab-9',style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Educational resources', value='tab-10', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Contact and feedback', value='tab-11', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Educational resources', value='tab-9', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Contact and feedback', value='tab-10', style=tab_style, selected_style=tab_selected_style),
             ], style=tabs_styles),
             html.Div(id='page-3-tabs-content')
         ])
@@ -376,6 +377,8 @@ def render_page_1_content(tab):
     if tab == 'tab-1':
         return html.Div([
             html.H3('See For-profit outsourcing in your Local Authority:'),
+            html.Hr(),
+            html.H6('Placements'),
             dcc.Dropdown(
                 id='LA-dropdown',
                 options=[{'label': geog_n, 'value': geog_n} for geog_n in la_df['geog_n'].unique()],
@@ -385,7 +388,20 @@ def render_page_1_content(tab):
             ),
             dcc.Graph(
                 id='scatter-plot'
-            )        ])
+            ),
+            html.Hr(),
+            html.H6('Expenditure'),
+            dcc.Dropdown(
+                id='LA-dropdown3',
+                options=[{'label': geog_n, 'value': geog_n} for geog_n in la_df['geog_n'].unique()],
+                value=None,
+                placeholder='Select a Local Authority',
+                style={'width': '600px', 'margin-bottom': '20px'}
+            ),
+            dcc.Graph(
+                id='scatter-plot2'
+            )
+               ])
     elif tab == 'tab-2':
         return html.Div([
             html.H3('See levels of outsourcing in your area:'),
@@ -463,6 +479,58 @@ def render_page_3_content(tab):
             html.Ul([
                 html.Li(html.A("Download Data with for LAs", href="https://raw.githubusercontent.com/BenGoodair/Outsourcing_Impact_Dashboard/main/Data/dashboard_LA_data_long.csv"))])  
          ])
+    elif tab == 'tab-9':
+        return html.Div([
+            html.H3("Links to Resources"),
+
+            html.H6("Research on outsourcing of children's social care"),
+            html.Ul([
+                html.Li(html.A("Do for-profit childrens homes outperform council-run homes?", href="https://www.sciencedirect.com/science/article/pii/S0277953622006293")),
+                html.Li(html.A("Does outsourcing correspond with better or worse quality placements for children?", href="https://www.sciencedirect.com/science/article/pii/S0277953622006293"))
+            ]),
+
+            html.H6("Research on outsourcing of adult's social care"),
+            html.H6("Research on outsourcing of healthcare"),
+            html.H6("Research from outside the UK")
+        ])
+    elif tab == 'tab-10':
+        return html.Div([
+            html.H3("Meet the team:"),
+            html.Ul([
+                html.Li([
+                    html.Img(src="https://github.com/BenGoodair/Outsourcing_Impact_Dashboard/blob/main/anders_bach-mortensen.jpg?raw=true", style={"width": "100px", "height": "100px"}),
+                    html.Div([
+                        html.H4("Anders"),
+                        html.P("Anders is a social scientist with expertise on outsourcing, social care services and systematic review methods."),
+                        html.P("Anders was national champion fencer in his youth - he now uses skills of precision in interpretting complex statistical models.")
+                    ], style={"display": "inline-block", "vertical-align": "top"})
+                ]),
+                html.Li([
+                    html.Img(src="https://github.com/BenGoodair/Methane_Dashboard/blob/main/ben.jpg?raw=true", style={"width": "100px", "height": "100px"}),
+                    html.Div([
+                        html.H4("Ben"),
+                        html.P("Ben is a social researcher identifying the impacts of privatization on health and social care systems."),
+                        html.P("Ben will embroider any form of data visualisation he thinks worthy of the thread.")
+                    ], style={"display": "inline-block", "vertical-align": "top"})
+                ])
+            ]),
+            html.H3("Partner with us:"),
+            html.H6("Join our team to continue this work"),
+            html.P("We are looking for partners with policy, industrial or lived experiences to join our happy community!"),
+            html.Ul([
+                html.Li('We can write a funding application to ensure labor compensated and valued.'),
+                html.Li('We want new directions and ideas, bring your creativity!'),
+                html.Li('We want to have fun and work in a respectful, supportive, and positive way.')
+            ]),
+            html.H3("Contact and feedback"),
+            html.H6("Help us improve this dashboard for your needs!"),
+            html.P("All our work is completely open access and reproducible, we'd love to work with you to apply this work to other data"),
+            html.Ul([
+                html.Li('Email us at: benjamin.goodair@spi.ox.ac.uk'),
+                html.Li('Tweet us at: @BenGoodair'),
+                html.Li('Find us at: DSPI, Oxford, United Kingdom')
+            ])
+        ])
 
 
 
@@ -480,11 +548,33 @@ def update_scatter_plot(selected_county):
     fig.update_layout(
         xaxis_title='Year',
         yaxis_title='For-profit placements (%)',
-        title='For-profit outsourcing 2011-22',
+        title='Percent of children placed with for-profit providers 2011-22',
         coloraxis_colorbar=dict(title='For-profit %')
     )
     
     return fig
+
+
+
+
+@app.callback(Output('scatter-plot2', 'figure'),[Input('LA-dropdown3', 'value')])
+def update_scatter_plot(selected_county):
+    if selected_county is None:
+        filtered_df_spend = la_df[['geog_n','year' ,'private_spend_percent']]
+    else:
+        filtered_df_spend = la_df[la_df['geog_n'] == selected_county]
+
+    fig2 = px.scatter(filtered_df_spend, x='year', y='private_spend_percent', color='private_spend_percent', trendline='lowess',
+                     color_continuous_scale='ylorrd')
+    fig2.update_traces(marker=dict(size=5))
+    fig2.update_layout(
+        xaxis_title='Year',
+        yaxis_title='For-profit placements (%)',
+        title='Percent of expenditure on for-profit providers 2011-22',
+        coloraxis_colorbar=dict(title='For-profit %')
+    )
+    
+    return fig2
 
 
 # Create a separate DataFrame for x-axis categories
