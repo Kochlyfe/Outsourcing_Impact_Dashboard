@@ -16,7 +16,6 @@ import chart_studio.plotly as py
 import dash_bootstrap_components as dbc
 import plotly.express as px
 
-import plotly.express as px
 from plotly.colors import sequential
 
 
@@ -35,13 +34,13 @@ from plotly.colors import sequential
 ####HEALTHY CAKES####
 
 
-la_df = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/Outsourcing_Impact_Dashboard/main/Data/dashboard_LA_data.csv")
-la_df_long = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/Outsourcing_Impact_Dashboard/main/Data/dashboard_LA_data_long.csv")
+#la_df = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/Outsourcing_Impact_Dashboard/main/Data/dashboard_LA_data.csv")
+la_df = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/childrens_social_care_data/main/Final_Data/outputs/dashboard_data.csv")
 
-# alter the mh ID to be "mental health"
-import pandas as pd
-import plotly.graph_objects as go
+
 import plotly.colors as colors
+
+####Need to come back to this when i Have children's homes % for each LA for the map####
 
 la_df.sort_values(by='geog_n', ascending=True, inplace=True)
 
@@ -101,74 +100,224 @@ map.update_traces(hovertemplate='Local Authority: %{customdata[0]}<br>Number of 
 
 ##### provider bars #####
 
-provider_df = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/Outsourcing_Impact_Dashboard/main/Data/dashboard_provider_data.csv")
+ProviderData = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/childrens_social_care_data/main/Final_Data/outputs/Provider_data.csv", encoding='ISO-8859-1')
+import pandas as pd
 
-# Convert date column to datetime format
-provider_df["date"] = pd.to_datetime(provider_df["Registration.date"], format="%d/%m/%Y")
+# Assuming you have your data in a DataFrame called ProviderData
+ProviderData['date'] = pd.to_datetime(ProviderData['Registration.date'], format="%d/%m/%Y")
+ProviderData['month'] = ProviderData['date'].dt.strftime('%m/%y')
+ProviderData['time'] = (ProviderData['date'] - pd.to_datetime("2022-12-01")).dt.days // 30
 
-# Extract month and year from the date
-provider_df["month"] = provider_df["date"].dt.strftime("%m/%y")
+Providernobs = ProviderData.loc[ProviderData['Provision.type'] == "Children's home", ["time", "Sector", "URN"]].drop_duplicates()
+Providernobs = Providernobs.sort_values(by="time")
+nobsByIdih = Providernobs.groupby(['time', 'Sector']).size().reset_index(name='nobs')
+nobsprive = nobsByIdih[nobsByIdih['Sector'] == 'Private']
+nobsvol = nobsByIdih[nobsByIdih['Sector'] == 'Voluntary']
+nobsla = nobsByIdih[nobsByIdih['Sector'] == 'Local Authority']
 
-# Calculate time in months from March 1, 2023
-provider_df["time"] = (provider_df["date"] - pd.to_datetime("2021-12-30")).dt.days // 30
+# Assuming you have a variable cbPalette defined somewhere
+# and it's a list of colors
+cbPalette = ['color1', 'color2', 'color3']
 
-# Filter rows with Provision.type as "Children's home" and select relevant columns
-provider_df = provider_df.loc[provider_df["Provision.type"] == "Children's home", ["time", "Sector", "URN"]].drop_duplicates()
+all = nobsla[['Sector']].drop_duplicates()
+all = all.loc[all.index.repeat(596)].reset_index(drop=True)
+all['time'] = range(-595, 1)
+all['er'] = 1
+nobsla = pd.merge(nobsla, all, on=['Sector', 'time'], how='outer').sort_values(by="time")
+nobsla['nobs'].fillna(0, inplace=True)
+nobsla['cumulative'] = nobsla['nobs'].cumsum()
 
-# Map Sector values to desired categories
-provider_df["Sector"] = provider_df["Sector"].map({
-    "Private": "For-profit",
-    "Local Authority": "Local Authority",
-    "Health Authority": "Local Authority",
-    "Voluntary": "Third Sector"
+all = nobsvol[['Sector']].drop_duplicates()
+all = all.loc[all.index.repeat(596)].reset_index(drop=True)
+all['time'] = range(-595, 1)
+all['er'] = 1
+nobsvol = pd.merge(nobsvol, all, on=['Sector', 'time'], how='outer').sort_values(by="time")
+nobsvol['nobs'].fillna(0, inplace=True)
+nobsvol['cumulative'] = nobsvol['nobs'].cumsum()
+
+all = nobsprive[['Sector']].drop_duplicates()
+all = all.loc[all.index.repeat(596)].reset_index(drop=True)
+all['time'] = range(-595, 1)
+all['er'] = 1
+nobsprive = pd.merge(nobsprive, all, on=['Sector', 'time'], how='outer').sort_values(by="time")
+nobsprive['nobs'].fillna(0, inplace=True)
+nobsprive['cumulative'] = nobsprive['nobs'].cumsum()
+
+nobs = pd.concat([nobsla, nobsvol, nobsprive])
+nobs['Sector'] = nobs['Sector'].replace({"Private": "For-profit", "Local Authority": "Local Authority", "Voluntary": "Third Sector"})
+
+nobs = nobs[nobs['time'] > -227] #Jan 2004
+
+nobs["Local.authority"]= "All"
+
+
+Providernobs = ProviderData[(ProviderData['Provision.type'] == "Children's home") & (~ProviderData['Local.authority'].isna())]
+Providernobs = Providernobs[['time', 'Sector', 'URN', 'Local.authority']].drop_duplicates()
+
+nobsByIdih = Providernobs.groupby(['time', 'Local.authority', 'Sector']).size().reset_index(name='nobs')
+
+nobsprive = nobsByIdih[nobsByIdih['Sector'] == "Private"]
+nobsvol = nobsByIdih[nobsByIdih['Sector'] == "Voluntary"]
+nobsla = nobsByIdih[nobsByIdih['Sector'] == "Local Authority"]
+
+unique_local_authorities = nobsla['Local.authority'].unique()
+times = list(range(-595, 1))
+all_data = pd.DataFrame({
+    'Sector': 'Private',
+    'Local.authority': [local_authority for local_authority in unique_local_authorities for _ in times],
+    'time': [time for _ in unique_local_authorities for time in times],
+    'er': 1
 })
 
-# Group by time and Sector, calculate the count (nobs), and set Sector as a categorical variable
-provider_df = provider_df.groupby(["time", "Sector"]).size().reset_index(name="nobs")
-provider_df["Sector"] = pd.Categorical(provider_df["Sector"], categories=["For-profit", "Local Authority", "Third Sector"])
 
-# Generate a DataFrame with all unique Sector values and repeated time values
-all_sectors = pd.DataFrame({"Sector": provider_df["Sector"].unique()})
-all_sectors = all_sectors.loc[all_sectors.index.repeat(594)].reset_index(drop=True)
-all_sectors["time"] = all_sectors.groupby("Sector").cumcount() - 593
-all_sectors["er"] = 1
-
-# Merge provider_df with all_sectors to fill missing combinations
-provider_df = pd.merge(all_sectors, provider_df, on=["Sector", "time"], how="left")
-provider_df["nobs"] = provider_df["nobs"].fillna(0)
-
-# Calculate cumulative sum of nobs within each Sector group
-#think this isn't working
-
-provider_df.sort_values(by='time', ascending=True, inplace=True)
+nobsprive = pd.merge(all_data, nobsprive, on=['Sector', 'time', 'Local.authority'], how='right')
+nobsprive = nobsprive.sort_values('time').fillna(0)  # Fill NaNs with 0
+nobsprive['cumulative'] = nobsprive.groupby('Local.authority')['nobs'].cumsum()
 
 
-provider_df["cumulative"] = provider_df.groupby("Sector")["nobs"].cumsum()
+all_data['Sector'] = 'Local Authority'
+nobsla = pd.merge(all_data, nobsla, on=['Sector', 'time', 'Local.authority'], how='right')
+nobsla = nobsla.sort_values('time').fillna(0)  # Fill NaNs with 0
+nobsla['cumulative'] = nobsla.groupby('Local.authority')['nobs'].cumsum()
+
+all_data['Sector'] = 'Voluntary'
+nobsvol = pd.merge(all_data, nobsvol, on=['Sector', 'time', 'Local.authority'], how='right')
+nobsvol = nobsvol.sort_values('time').fillna(0)  # Fill NaNs with 0
+nobsvol['cumulative'] = nobsvol.groupby('Local.authority')['nobs'].cumsum()
+
+nobs2 = pd.concat([nobsla, nobsvol, nobsprive], ignore_index=True)
+nobs2['Sector'] = pd.Categorical(nobs2['Sector'], categories=['Private', 'Local Authority', 'Voluntary'])
+nobs2['Sector'] = nobs2['Sector'].cat.rename_categories(['For-profit', 'Local Authority', 'Third Sector'])
+
+nobs2 = nobs2[nobs2['time'] > -227] #Jan 2004
 
 
-#print(provider_df)
+nobs_fin = pd.concat([nobs2, nobs])
 
-# Filter rows with time greater than -157 and set cumulative as NA for time greater than -11
-provider_df = provider_df[provider_df['time'] >= -211]
+nobs_fin['Homes or places']= "Homes"
 
-colors = ["#D20E46", "#EABB0E", "#C7F00E"]
 
-# # Create the bar graph
-# bar = px.bar(provider_df[provider_df['time'] == -157], x='Sector', y='cumulative')
 
-# # Customize the appearance with the color palette
-# bar.update_traces(marker_color=colors)
 
-# bar.update_layout(title='Cumulative Data by Sector',
-#                   xaxis_title='Sector',
-#                   yaxis_title='Cumulative',
-#                   plot_bgcolor='rgba(0,0,0,0)',
-#                   paper_bgcolor='rgba(0,0,0,0)',
-#                   font=dict(color='black'),
-#                   bargap=0.15)
 
-# # Show the graph
-# bar.show()
+
+
+
+
+Providernobs = ProviderData.loc[ProviderData['Provision.type'] == "Children's home", ["time", "Sector", "URN", "Places"]].drop_duplicates()
+Providernobs = Providernobs.sort_values(by="time")
+nobsByIdih = Providernobs.groupby(['time', 'Sector'])['Places'].sum().reset_index()
+nobsprive = nobsByIdih[nobsByIdih['Sector'] == 'Private']
+nobsvol = nobsByIdih[nobsByIdih['Sector'] == 'Voluntary']
+nobsla = nobsByIdih[nobsByIdih['Sector'] == 'Local Authority']
+
+# Assuming you have a variable cbPalette defined somewhere
+# and it's a list of colors
+cbPalette = ['color1', 'color2', 'color3']
+
+all = nobsla[['Sector']].drop_duplicates()
+all = all.loc[all.index.repeat(596)].reset_index(drop=True)
+all['time'] = range(-595, 1)
+all['er'] = 1
+nobsla = pd.merge(nobsla, all, on=['Sector', 'time'], how='outer').sort_values(by="time")
+nobsla['Places'].fillna(0, inplace=True)
+nobsla['cumulative'] = nobsla['Places'].cumsum()
+
+all = nobsvol[['Sector']].drop_duplicates()
+all = all.loc[all.index.repeat(596)].reset_index(drop=True)
+all['time'] = range(-595, 1)
+all['er'] = 1
+nobsvol = pd.merge(nobsvol, all, on=['Sector', 'time'], how='outer').sort_values(by="time")
+nobsvol['Places'].fillna(0, inplace=True)
+nobsvol['cumulative'] = nobsvol['Places'].cumsum()
+
+all = nobsprive[['Sector']].drop_duplicates()
+all = all.loc[all.index.repeat(596)].reset_index(drop=True)
+all['time'] = range(-595, 1)
+all['er'] = 1
+nobsprive = pd.merge(nobsprive, all, on=['Sector', 'time'], how='outer').sort_values(by="time")
+nobsprive['Places'].fillna(0, inplace=True)
+nobsprive['cumulative'] = nobsprive['Places'].cumsum()
+
+nobs = pd.concat([nobsla, nobsvol, nobsprive])
+nobs['Sector'] = nobs['Sector'].replace({"Private": "For-profit", "Local Authority": "Local Authority", "Voluntary": "Third Sector"})
+
+nobs = nobs[nobs['time'] > -227] #Jan 2004
+
+nobs["Local.authority"]= "All"
+
+
+
+
+Providernobs = ProviderData[(ProviderData['Provision.type'] == "Children's home") & (~ProviderData['Local.authority'].isna())]
+Providernobs = Providernobs[['time', 'Sector', 'URN', 'Local.authority', 'Places']].drop_duplicates()
+
+nobsByIdih = Providernobs.groupby(['time', 'Local.authority', 'Sector'])['Places'].sum().reset_index()
+
+
+nobsprive = nobsByIdih[nobsByIdih['Sector'] == "Private"]
+nobsvol = nobsByIdih[nobsByIdih['Sector'] == "Voluntary"]
+nobsla = nobsByIdih[nobsByIdih['Sector'] == "Local Authority"]
+
+unique_local_authorities = nobsla['Local.authority'].unique()
+times = list(range(-595, 1))
+all_data = pd.DataFrame({
+    'Sector': 'Private',
+    'Local.authority': [local_authority for local_authority in unique_local_authorities for _ in times],
+    'time': [time for _ in unique_local_authorities for time in times],
+    'er': 1
+})
+
+
+nobsprive = pd.merge(all_data, nobsprive, on=['Sector', 'time', 'Local.authority'], how='right')
+nobsprive = nobsprive.sort_values('time').fillna(0)  # Fill NaNs with 0
+nobsprive['cumulative'] = nobsprive.groupby('Local.authority')['Places'].cumsum()
+
+
+all_data['Sector'] = 'Local Authority'
+nobsla = pd.merge(all_data, nobsla, on=['Sector', 'time', 'Local.authority'], how='right')
+nobsla = nobsla.sort_values('time').fillna(0)  # Fill NaNs with 0
+nobsla['cumulative'] = nobsla.groupby('Local.authority')['Places'].cumsum()
+
+all_data['Sector'] = 'Voluntary'
+nobsvol = pd.merge(all_data, nobsvol, on=['Sector', 'time', 'Local.authority'], how='right')
+nobsvol = nobsvol.sort_values('time').fillna(0)  # Fill NaNs with 0
+nobsvol['cumulative'] = nobsvol.groupby('Local.authority')['Places'].cumsum()
+
+nobs2 = pd.concat([nobsla, nobsvol, nobsprive], ignore_index=True)
+nobs2['Sector'] = pd.Categorical(nobs2['Sector'], categories=['Private', 'Local Authority', 'Voluntary'])
+nobs2['Sector'] = nobs2['Sector'].cat.rename_categories(['For-profit', 'Local Authority', 'Third Sector'])
+
+nobs2 = nobs2[nobs2['time'] > -227] #Jan 2004
+
+
+nobs_fin2 = pd.concat([nobs2, nobs])
+
+nobs_fin2['Homes or places']= "Places"
+
+
+nobs_final = pd.concat([nobs_fin, nobs_fin2])
+
+
+
+
+
+
+
+
+
+# Assuming you have a ggplot equivalent in Python
+# and a variable 'cbPalette' defined as a list of colors
+# and 'nobs' as your DataFrame
+#d = ggplot(nobs[nobs['time'] > -211], aes(x='time', y='cumulative', group='Sector', fill='Sector', colour='Sector')) + \
+#    geom_point() + \
+#    theme_minimal() + \
+#    scale_color_manual(values=cbPalette[0:3]) + \
+#    labs(x='Year', y="Number of Children's homes", title='Number of active children\'s homes', fill='Ownership', color='Ownership') + \
+#    scale_x_continuous(breaks=[-7, -31, -55, -79, -103, -127, -151, -175, -199],
+#                       labels=["2021", "2019", "2017", "2015", "2013", "2011", "2009", "2007", "2005"])
+
+
 
 import plotly.express as px
 import plotly.graph_objects as go
@@ -336,9 +485,10 @@ def render_page_content(pathname):
     elif pathname == "/page-1":
         return html.Div([
             dcc.Tabs(id="page-1-tabs", value='tab-1', children=[
-                dcc.Tab(label='Outsourcing levels', value='tab-1', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Outsourcing geographies', value='tab-2', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Childrens homes expansion', value='tab-3', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Outsourced Placements', value='tab-1', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Outsourced Spending', value='tab-2', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Residential Care Providers', value='tab-3', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Outsourcing Geographies', value='tab-4', style=tab_style, selected_style=tab_selected_style),
             ], style=tabs_styles),
             html.Div(id='page-1-tabs-content')
         ])
@@ -388,7 +538,10 @@ def render_page_1_content(tab):
             ),
             dcc.Graph(
                 id='scatter-plot'
-            ),
+            )])
+    elif tab == 'tab-2':
+        return html.Div([
+            html.H3('See levels of outsourcing in your area:'),
             html.Hr(),
             html.H6('Expenditure'),
             dcc.Dropdown(
@@ -401,28 +554,32 @@ def render_page_1_content(tab):
             dcc.Graph(
                 id='scatter-plot2'
             )
-               ])
-    elif tab == 'tab-2':
+                           ])
+    elif tab == 'tab-3':
+        return html.Div([
+            html.H3('Look at the rise in for-profit childrens homes'),
+            html.H1("Number of active children's homes"),
+            dcc.Graph(id='child-homes-plot'),
+            dcc.Dropdown(
+              id='local-authority-dropdown',
+              options=[
+                 {'label': la, 'value': la} for la in nobs_final['Local.authority'].unique()
+              ],
+              value=nobs_final['Local.authority'].unique()[0]
+            ),
+             dcc.Dropdown(
+                 id='homes-or-places-dropdown',
+                 options=[
+                     {'label': hop, 'value': hop} for hop in nobs_final['Homes or places'].unique()
+                 ],
+                value=nobs_final['Homes or places'].unique()[0]
+            )
+            ])
+    elif tab == 'tab-4':
         return html.Div([
             html.H3('See levels of outsourcing in your area:'),
             dcc.Graph(id='map',  figure=map, style={'height': '1000px'})
             ])
-    elif tab == 'tab-3':
-        return html.Div([
-            html.H3('Look at the rise in for-profit childrens homes'),
-            dcc.Graph(id='bar', style={'height': '600px'}),
-            html.H3('Select time period:'),
-            dcc.Slider(
-                id='date-slider',
-                min=provider_df['time'].min(),
-                max=provider_df['time'].max(),
-                value=provider_df['time'].min(),
-                marks={str(time): (str(2005 - (provider_df['time'].min() - int(time)) // 12) if (int(time) - provider_df['time'].min()) % 12 == 0 else '')
-                    for time in provider_df['time'].unique()},
-                step=None,
-                drag_value=True  # Enable dragging the slider handle smoothly
-            )
-        ])
 
 @app.callback(Output('page-2-tabs-content', 'children'), [Input('page-2-tabs', 'value')])
 def render_page_2_content(tab):
@@ -578,35 +735,23 @@ def update_scatter_plot(selected_county):
 
 
 # Create a separate DataFrame for x-axis categories
-sectors = provider_df['Sector'].unique()
+sectors = nobs_final['Sector'].unique()
 
 
-@app.callback(Output('bar', 'figure'), [Input('date-slider', 'value')])
-def update_bar_graph(selected_date):
-    provider_df_filtered = provider_df[provider_df['time'] == selected_date]
-    provider_df_filtered = provider_df_filtered.sort_values(by=['Sector'], key=lambda x: x.map({sector: i for i, sector in enumerate(sectors)}))
-
-    bar = px.bar(provider_df_filtered, x='Sector', y='cumulative')
-
-    # Customize the appearance with the color palette
-    bar.update_traces(marker_color=colors)
-
-    bar.update_layout(
-        title='Cumulative Data by Sector',
-        xaxis_title='Sector',
-        yaxis_title='Cumulative',
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='black'),
-        bargap=0.15,
-        xaxis=dict(
-            tickmode='array',
-            tickvals=list(range(len(sectors))),
-            ticktext=sectors
-        ),
+@app.callback(
+    Output('child-homes-plot', 'figure'),
+    Input('local-authority-dropdown', 'value'),
+    Input('homes-or-places-dropdown', 'value')
+)
+def update_plot(selected_local_authority, selected_homes_or_places):
+    filtered_nobs = nobs_final[(nobs_final['Local.authority'] == selected_local_authority) & (nobs_final['Homes or places'] == selected_homes_or_places)]
+    fig = px.scatter(filtered_nobs, x='time', y='cumulative', color='Sector')
+    fig.update_layout(
+        title=f"Number of active children's homes ({selected_local_authority}, {selected_homes_or_places})",
+        xaxis_title='Year',
+        yaxis_title="Number of Children's homes",
     )
-
-    return bar
+    return fig
 
 
 
