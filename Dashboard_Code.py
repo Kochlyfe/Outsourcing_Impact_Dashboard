@@ -360,10 +360,72 @@ nobs_final = pd.concat([nobs_fin, nobs_fin2]).sort_values(by="Local.authority")
 
 import plotly.express as px
 import plotly.graph_objects as go
+import numpy as np
 
 
+data = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/childrens_social_care_data/main/Final_Data/outputs/active_chomes_2023.csv", encoding='ISO-8859-1')
 
+# Create a unique circle identifier for each 'Overall.experiences'
+data['Circle'] = data.groupby('Overall.experiences.and.progress.of.children.and.young.people').ngroup()
 
+# Define the custom order for 'Overall.experiences'
+custom_order = ['Outstanding', 'Good', 'Requires improvement to be good', 'Inadequate']
+
+# Create a Categorical data type with the desired order
+data['Overall_Experiences_Mapping'] = pd.Categorical(data['Overall.experiences.and.progress.of.children.and.young.people'], categories=custom_order, ordered=True)
+
+# Define a function to add points within a circle
+def add_points_in_circle(group):
+    radius = 0.4  # Adjust this value to control the radius of the circles
+
+    # Calculate the number of points based on the total number of rows in the group
+    num_points = len(group)
+
+    # Generate random angles and radii within the circle for each group
+    theta = np.linspace(0, 2 * np.pi, num_points)
+    r = np.sqrt(np.random.uniform(0, 1, num_points)) * radius
+
+    group['Jittered_x'] = group['Circle'] + r * np.cos(theta)
+    group['Jittered_y'] = group['Overall_Experiences_Mapping'].cat.codes + r * np.sin(theta)
+    return group
+
+# Apply the point addition function to each group
+data = data.groupby('Circle').apply(add_points_in_circle).reset_index(drop=True)
+
+# Create a bubble chart with perfectly filled huge bubbles filled with jittered points in both dimensions
+fig = px.scatter(data, x='Jittered_x', y='Jittered_y',
+                 color='Sector',
+                 hover_name='Organisation.which.owns.the.provider',
+                 hover_data=['Places', 'Registration.date', 'Local.authority', 'Sector'],
+                 labels={'Sector': 'Sector'},
+                 title="Active Children's Homes - as of March 2023")
+
+# Update the size and opacity of the bubbles
+marker_size = 5
+fig.update_traces(marker=dict(size=marker_size, opacity=0.5))
+
+# Remove the axes, background, and labels
+fig.update_xaxes(showline=False, showgrid=False, showticklabels=False, title_text='')
+fig.update_yaxes(showline=False, showgrid=False, showticklabels=False, title_text='')
+
+# Add labels for each group
+for group, group_data in data.groupby('Circle'):
+    # Calculate the position for the label above the group
+    x_label = group_data['Jittered_x'].mean()
+    y_label = group_data['Jittered_y'].max() + 0.1  # Adjust the vertical position as needed
+
+    # Add a text annotation to the figure
+    fig.add_annotation(
+        x=x_label,
+        y=y_label,
+        text=str(group_data['Overall_Experiences_Mapping'].cat.categories[0]),
+        showarrow=False,
+        font=dict(size=14),
+        opacity=0.7
+    )
+
+# Show the plot
+fig.show()
 
 
 
