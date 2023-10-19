@@ -36,60 +36,99 @@ from plotly.colors import sequential
 
 #la_df = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/Outsourcing_Impact_Dashboard/main/Data/dashboard_LA_data.csv")
 la_df = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/childrens_social_care_data/main/Final_Data/outputs/dashboard_data.csv")
+la_df['percent'] = pd.to_numeric(la_df['percent'], errors='coerce')
+la_df.sort_values(by='LA_Name', ascending=True, inplace=True)
 
 
 import plotly.colors as colors
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 ####Need to come back to this when i Have children's homes % for each LA for the map####
-
-la_df.sort_values(by='geog_n', ascending=True, inplace=True)
-
-la_df['private_spend_percent'] = (la_df['Private_spend']/(la_df['Total_spend']*1000000))*100
 
 
 import geopandas as gpd
-df2021 = la_df[la_df['year'] == 2021]
+df2022 = la_df[la_df['year'] == 2022]
 
-df2021.loc[df2021['New_geog_code'] == 'E06000060', 'New_geog_code'] = 'E10000002'
+#df2022[df2022['LA_Code'] == 'E06000017']
+#df2022[(df2022['subcategory'] =='Private')]
+#uaboundaries[uaboundaries['lad19nm'] == 'Rutland']
+
+
+
+#df2022.loc[df2022['LA_Code'] == 'E06000060', 'LA_Code'] = 'E10000002'
 
 # Rename columns
-uaboundaries = gpd.read_file("https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Counties_and_Unitary_Authorities_December_2019_GCB_UK_2022/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson")
-uaboundaries = uaboundaries.rename(columns={"ctyua19cd": "New_geog_code", "ctyua19nm": "lad19nm", "ctyua19nmw": "lad19nmw"})
+uaboundaries = gpd.read_file("https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Counties_and_Unitary_Authorities_December_2022_UK_BUC/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson")
+uaboundaries = uaboundaries.rename(columns={"CTYUA22CD": "LA_Code", "CTYUA22NM": "lad19nm", "CTYUA22NMW": "lad19nmw"})
 
 # Filter out unwanted data
 uaboundaries = uaboundaries[~uaboundaries["lad19nm"].isin(["Wales", "Scotland"])]
-uaboundaries = uaboundaries[uaboundaries["New_geog_code"].str.startswith('E')]
-
-df2021 = df2021[['New_geog_code','geog_n','CLA_Mar', 'per_for_profit', 'Private_spend', 'Total_spend']]
+uaboundaries = uaboundaries[uaboundaries["LA_Code"].str.startswith('E')]
 
 
-merged = uaboundaries.set_index('New_geog_code').join(df2021.set_index('New_geog_code'))
+
+merged = uaboundaries.set_index('LA_Code').join(df2022.set_index('LA_Code'))
 #merged = merged.reset_index()
 #merged.head()
 
 
 #customdata = np.stack((df2021['geog_n'], df2021['CLA_Mar'], df2021['per_for_profit'], df2021['Private_spend'], df2021['Total_spend']), axis=-1)
 
-merged = merged.dropna(subset=['geog_n'])
-
-min_value = merged['per_for_profit'].min()
-max_value = merged['per_for_profit'].max()
-
-merged['Private_spend'] = merged['Private_spend'] / 1000000
+merged = merged.dropna(subset=['LA_Name'])
 
 merged = merged.round(decimals=2)
 
+merged2 = merged[(merged['variable'] == 'Private provision') | 
+((merged['variable'] == 'Total Children Looked After') & (merged['subcategory'] == "For_profit"))|
+((merged['variable'] == 'Places') & (merged['subcategory'] == "Private"))
+]
 
-map = px.choropleth_mapbox(merged, geojson=merged.geometry, locations=merged.index, color='per_for_profit',
-                            color_continuous_scale='ylorrd', center={"lat": 52.9781, "lon": -1.82360},
-                            custom_data=['geog_n','CLA_Mar', 'per_for_profit', 'Private_spend', 'Total_spend'],
-                            mapbox_style='open-street-map',
-                            hover_name = 'geog_n', zoom=6)
+merged2.loc[(merged2['variable'] == 'Places') & (merged2['subcategory'] == "Private"), 'variable'] = "For-profit Children's Homes Places (%)"
+merged2.loc[merged2['variable'] == 'Private provision', 'variable'] = "For-profit Placements (%)"
+merged2.loc[(merged2['variable'] == 'Total Children Looked After') & (merged2['subcategory'] == "For_profit"), 'variable'] = "For-profit Expenditure (%)"
+   
 
-map.update_traces(hovertemplate='Local Authority: %{customdata[0]}<br>Number of children in care: %{customdata[1]}<br>Percent of children in FP placement: %{customdata[2]}<br>Total expenditure (Ms): %{customdata[4]}<br>For-profit expenditure (Ms): %{customdata[3]}')
 
-#map.show()
- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ####outcomes####
@@ -170,18 +209,18 @@ all_data = pd.DataFrame({
 })
 
 
-nobsprive = pd.merge(all_data, nobsprive, on=['Sector', 'time', 'Local.authority'], how='right')
+nobsprive = pd.merge(all_data, nobsprive, on=['Sector', 'time', 'Local.authority'], how='left')
 nobsprive = nobsprive.sort_values('time').fillna(0)  # Fill NaNs with 0
 nobsprive['cumulative'] = nobsprive.groupby('Local.authority')['nobs'].cumsum()
 
 
 all_data['Sector'] = 'Local Authority'
-nobsla = pd.merge(all_data, nobsla, on=['Sector', 'time', 'Local.authority'], how='right')
+nobsla = pd.merge(all_data, nobsla, on=['Sector', 'time', 'Local.authority'], how='left')
 nobsla = nobsla.sort_values('time').fillna(0)  # Fill NaNs with 0
 nobsla['cumulative'] = nobsla.groupby('Local.authority')['nobs'].cumsum()
 
 all_data['Sector'] = 'Voluntary'
-nobsvol = pd.merge(all_data, nobsvol, on=['Sector', 'time', 'Local.authority'], how='right')
+nobsvol = pd.merge(all_data, nobsvol, on=['Sector', 'time', 'Local.authority'], how='left')
 nobsvol = nobsvol.sort_values('time').fillna(0)  # Fill NaNs with 0
 nobsvol['cumulative'] = nobsvol.groupby('Local.authority')['nobs'].cumsum()
 
@@ -269,18 +308,18 @@ all_data = pd.DataFrame({
 })
 
 
-nobsprive = pd.merge(all_data, nobsprive, on=['Sector', 'time', 'Local.authority'], how='right')
+nobsprive = pd.merge(all_data, nobsprive, on=['Sector', 'time', 'Local.authority'], how='left')
 nobsprive = nobsprive.sort_values('time').fillna(0)  # Fill NaNs with 0
 nobsprive['cumulative'] = nobsprive.groupby('Local.authority')['Places'].cumsum()
 
 
 all_data['Sector'] = 'Local Authority'
-nobsla = pd.merge(all_data, nobsla, on=['Sector', 'time', 'Local.authority'], how='right')
+nobsla = pd.merge(all_data, nobsla, on=['Sector', 'time', 'Local.authority'], how='left')
 nobsla = nobsla.sort_values('time').fillna(0)  # Fill NaNs with 0
 nobsla['cumulative'] = nobsla.groupby('Local.authority')['Places'].cumsum()
 
 all_data['Sector'] = 'Voluntary'
-nobsvol = pd.merge(all_data, nobsvol, on=['Sector', 'time', 'Local.authority'], how='right')
+nobsvol = pd.merge(all_data, nobsvol, on=['Sector', 'time', 'Local.authority'], how='left')
 nobsvol = nobsvol.sort_values('time').fillna(0)  # Fill NaNs with 0
 nobsvol['cumulative'] = nobsvol.groupby('Local.authority')['Places'].cumsum()
 
@@ -296,7 +335,7 @@ nobs_fin2 = pd.concat([nobs2, nobs])
 nobs_fin2['Homes or places']= "Places"
 
 
-nobs_final = pd.concat([nobs_fin, nobs_fin2])
+nobs_final = pd.concat([nobs_fin, nobs_fin2]).sort_values(by="Local.authority")
 
 
 
@@ -431,7 +470,8 @@ sidebar = html.Div(
                 dbc.NavLink("Home", href="/", active="exact"),
                 dbc.NavLink("Outsourcing levels", href="/page-1", active="exact"),
                 dbc.NavLink("Quality Impacts", href="/page-2", active="exact"),
-                dbc.NavLink("Links To Resources", href="/page-3", active="exact"),
+                dbc.NavLink("Local Authority Profiles", href="/page-3", active="exact"),
+                dbc.NavLink("Links To Resources", href="/page-4", active="exact"),
             ],
             vertical=True,
             pills=True,
@@ -473,14 +513,15 @@ def render_page_content(pathname):
                 [
                     dbc.NavLink("Outsourcing levels", href="/page-1", active="exact"),
                     dbc.NavLink("Quality Impacts", href="/page-2", active="exact"),
-                    dbc.NavLink("Links to Resources", href="/page-3", active="exact"),
+                    dbc.NavLink("Local authority profiles", href="/page-3", active="exact"),
+                    dbc.NavLink("Further Resources", href="/page-4", active="exact"),
                 ],
                 vertical=True,
                 pills=True,
             ),
             html.Hr(),
             html.P("Acknowledgements: we are grateful to the support from Nuffield Foundation who motivated this dashboard."),
-            html.P("This dashboard was first developed by Carolin Kroeger, Dunja Matic and Ben Goodair - we are grateful to the input of all team members."),
+            html.P("A proof-of-concept version of this dashboard was first developed by Carolin Kroeger, Dunja Matic and Ben Goodair - we are grateful to the input of all team members."),
         ], style={"padding": "2rem"})
     elif pathname == "/page-1":
         return html.Div([
@@ -494,22 +535,28 @@ def render_page_content(pathname):
         ])
     elif pathname == "/page-2":
         return html.Div([
-            dcc.Tabs(id="page-2-tabs", value='tab-4', children=[
-                dcc.Tab(label='Outcomes for children in care', value='tab-4', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Sufficiency map (out of area and residential places)', value='tab-5', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Comparing LA profiles', value='tab-6', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Relationships to outsourcing', value='tab-7', style=tab_style, selected_style=tab_selected_style),
+            dcc.Tabs(id="page-2-tabs", value='tab-5', children=[
+                dcc.Tab(label='Ofsted ratings', value='tab-5', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Children outcomes', value='tab-6', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Placement quality', value='tab-7', style=tab_style, selected_style=tab_selected_style),
             ], style=tabs_styles),
             html.Div(id='page-2-tabs-content')
         ])
     elif pathname == "/page-3":
         return html.Div([
             dcc.Tabs(id="page-3-tabs", value='tab-8', children=[
-                dcc.Tab(label='Data download', value='tab-8', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Educational resources', value='tab-9', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Contact and feedback', value='tab-10', style=tab_style, selected_style=tab_selected_style),
-            ], style=tabs_styles),
+                dcc.Tab(label='Local authority profiles', value='tab-8', style=tab_style, selected_style=tab_selected_style),
+                ], style=tabs_styles),
             html.Div(id='page-3-tabs-content')
+        ])
+    elif pathname == "/page-4":
+        return html.Div([
+            dcc.Tabs(id="page-4-tabs", value='tab-9', children=[
+                dcc.Tab(label='Data download', value='tab-9', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Educational resources', value='tab-10', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Contact and feedback', value='tab-11', style=tab_style, selected_style=tab_selected_style),
+            ], style=tabs_styles),
+            html.Div(id='page-4-tabs-content')
         ])
    # If the user tries to reach a different page, return a 404 message
     return html.Div(
@@ -526,29 +573,39 @@ def render_page_content(pathname):
 def render_page_1_content(tab):
     if tab == 'tab-1':
         return html.Div([
-            html.H3('See For-profit outsourcing in your Local Authority:'),
+               html.H1("For-profit outsourcing of social care placements:"),
+               html.H3("Select a Local Authority"),
+               dcc.Dropdown(
+                 id='LA-dropdown',
+                 options=[
+                     {'label': hop, 'value': hop} for hop in la_df[la_df['variable']=="Private provision"]['LA_Name'].unique()
+                     ],
+                 value=None
+                 ),
+               dcc.Graph(id='scatter-plot'),
+            ])
+    elif tab == 'tab-2':
+        return html.Div([
+            html.H1('For-profit outsourcing of social care spending:'),
             html.Hr(),
-            html.H6('Placements'),
+            html.H3("Select a Local Authority"),
             dcc.Dropdown(
-                id='LA-dropdown',
-                options=[{'label': geog_n, 'value': geog_n} for geog_n in la_df['geog_n'].unique()],
-                value=None,
+                id='LA-dropdown3',
+                options=[
+                     {'label': hop, 'value': hop} for hop in la_df[(la_df['category']=="Expenditure") & (la_df['subcategory']=="For_profit")]['LA_Name'].unique()
+                     ],
+                value=la_df[(la_df['category']=="Expenditure") & (la_df['subcategory']=="For_profit")]['LA_Name'].unique()[0],
                 placeholder='Select a Local Authority',
                 style={'width': '600px', 'margin-bottom': '20px'}
             ),
-            dcc.Graph(
-                id='scatter-plot'
-            )])
-    elif tab == 'tab-2':
-        return html.Div([
-            html.H3('See levels of outsourcing in your area:'),
-            html.Hr(),
-            html.H6('Expenditure'),
+            html.H3("Select an area of expenditure"),
             dcc.Dropdown(
-                id='LA-dropdown3',
-                options=[{'label': geog_n, 'value': geog_n} for geog_n in la_df['geog_n'].unique()],
-                value=None,
-                placeholder='Select a Local Authority',
+                id='spend-dropdown',
+                options=[
+                     {'label': hop, 'value': hop} for hop in la_df[(la_df['category']=="Expenditure") & (la_df['subcategory']=="For_profit")]['variable'].unique()
+                     ],
+                value='Total Children Looked After',
+                placeholder='Select an area of expenditure',
                 style={'width': '600px', 'margin-bottom': '20px'}
             ),
             dcc.Graph(
@@ -557,9 +614,8 @@ def render_page_1_content(tab):
                            ])
     elif tab == 'tab-3':
         return html.Div([
-            html.H3('Look at the rise in for-profit childrens homes'),
-            html.H1("Number of active children's homes"),
-            dcc.Graph(id='child-homes-plot'),
+            html.H1("Number of active children's homes and available places"),
+            html.H3("Select a Local Authority"),
             dcc.Dropdown(
               id='local-authority-dropdown',
               options=[
@@ -567,19 +623,29 @@ def render_page_1_content(tab):
               ],
               value=nobs_final['Local.authority'].unique()[0]
             ),
-             dcc.Dropdown(
+            html.H3("Select Number of Homes or Places"),
+            dcc.Dropdown(
                  id='homes-or-places-dropdown',
                  options=[
                      {'label': hop, 'value': hop} for hop in nobs_final['Homes or places'].unique()
                  ],
                 value=nobs_final['Homes or places'].unique()[0]
-            )
+            ),
+            dcc.Graph(id='child-homes-plot'),
+            html.H6("*Estimates based on the registration date of children's homes inspected since 2018")
             ])
     elif tab == 'tab-4':
         return html.Div([
-            html.H3('See levels of outsourcing in your area:'),
-            dcc.Graph(id='map',  figure=map, style={'height': '1000px'})
-            ])
+            html.H1("Outsourcing Geographies"),
+            html.H3("Select a measure of outsourcing"),
+            dcc.Dropdown(
+              id='variable-dropdown',
+              options=[
+                 {'label': la, 'value': la} for la in merged2['variable'].unique()
+              ],
+              value=merged2['variable'].unique()[2]
+            ),
+            dcc.Graph(id='outsourcing-map',style={'height': '1000px'})])
 
 @app.callback(Output('page-2-tabs-content', 'children'), [Input('page-2-tabs', 'value')])
 def render_page_2_content(tab):
@@ -692,41 +758,41 @@ def render_page_3_content(tab):
 
 
 
-@app.callback(Output('scatter-plot', 'figure'),[Input('LA-dropdown', 'value')])
+@app.callback(Output('scatter-plot', 'figure'),Input('LA-dropdown', 'value'))
 def update_scatter_plot(selected_county):
-    if selected_county is None:
-        filtered_df = la_df[['geog_n','year' ,'per_for_profit']]
-    else:
-        filtered_df = la_df[la_df['geog_n'] == selected_county]
+ #    filtered_df = la_df[la_df['variable']=="Private provision"][la_df['LA_Name'] == selected_county]
 
-    fig = px.scatter(filtered_df, x='year', y='per_for_profit', color='per_for_profit', trendline='lowess',
+    if selected_county is None:
+        filtered_df = la_df[la_df['variable']=="Private provision"][['LA_Name','year' ,'percent']]
+    else:
+        filtered_df = la_df[la_df['variable']=="Private provision"][la_df['LA_Name'] == selected_county]
+
+    fig1 = px.scatter(filtered_df, x='year', y='percent', color='percent', trendline='lowess',
                      color_continuous_scale='ylorrd')
-    fig.update_traces(marker=dict(size=5))
-    fig.update_layout(
-        xaxis_title='Year',
-        yaxis_title='For-profit placements (%)',
-        title='Percent of children placed with for-profit providers 2011-22',
-        coloraxis_colorbar=dict(title='For-profit %')
-    )
+    fig1.update_traces(marker=dict(size=5))
+    fig1.update_layout(xaxis_title='Year',        yaxis_title='For-profit placements (%)',        title='Percent of children placed with for-profit providers 2011-22',        coloraxis_colorbar=dict(title='For-profit %')    )
     
-    return fig
+    return fig1
 
 
 
 
-@app.callback(Output('scatter-plot2', 'figure'),[Input('LA-dropdown3', 'value')])
-def update_scatter_plot(selected_county):
-    if selected_county is None:
-        filtered_df_spend = la_df[['geog_n','year' ,'private_spend_percent']]
-    else:
-        filtered_df_spend = la_df[la_df['geog_n'] == selected_county]
 
-    fig2 = px.scatter(filtered_df_spend, x='year', y='private_spend_percent', color='private_spend_percent', trendline='lowess',
+
+@app.callback(Output('scatter-plot2', 'figure'), Input('LA-dropdown3', 'value'), Input('spend-dropdown', 'value'))
+
+def update_scatter_plot(selected_county, selected_expenditure):
+    filtered_df_spend = la_df[(la_df['category'] == "Expenditure") & 
+                          (la_df['subcategory'] == "For_profit") & 
+                          (la_df['LA_Name'] == selected_county) & 
+                          (la_df['variable'] == selected_expenditure)]
+    
+    fig2 = px.scatter(filtered_df_spend, x='year', y='percent', color='percent', trendline='lowess',
                      color_continuous_scale='ylorrd')
     fig2.update_traces(marker=dict(size=5))
     fig2.update_layout(
         xaxis_title='Year',
-        yaxis_title='For-profit placements (%)',
+        yaxis_title='For-profit expenditure (%)',
         title='Percent of expenditure on for-profit providers 2011-22',
         coloraxis_colorbar=dict(title='For-profit %')
     )
@@ -738,20 +804,68 @@ def update_scatter_plot(selected_county):
 sectors = nobs_final['Sector'].unique()
 
 
-@app.callback(
-    Output('child-homes-plot', 'figure'),
-    Input('local-authority-dropdown', 'value'),
-    Input('homes-or-places-dropdown', 'value')
-)
+@app.callback(Output('child-homes-plot', 'figure'),Input('local-authority-dropdown', 'value'),Input('homes-or-places-dropdown', 'value'))
 def update_plot(selected_local_authority, selected_homes_or_places):
     filtered_nobs = nobs_final[(nobs_final['Local.authority'] == selected_local_authority) & (nobs_final['Homes or places'] == selected_homes_or_places)]
-    fig = px.scatter(filtered_nobs, x='time', y='cumulative', color='Sector')
+
+    custom_colors = {"For-profit": "#1f77b4", "Local Authority": "#ff7f0e", "Third Sector": "#2ca02c"}
+
+
+    fig = px.scatter(filtered_nobs, x='time', y='cumulative', color='Sector',
+                     color_discrete_map=custom_colors)
+    
+    # Add a line trace
+    line_data = filtered_nobs[filtered_nobs['time'] > -211].groupby(['time', 'Sector'])['cumulative'].sum().reset_index()
+    for sector in line_data['Sector'].unique():
+        sector_data = line_data[line_data['Sector'] == sector]
+        fig.add_trace(go.Scatter(x=sector_data['time'], y=sector_data['cumulative'],
+                                 mode='lines+markers', name=sector,
+                                 line=dict(color=custom_colors[sector]),
+                                 showlegend=False))  # Hide the legend for the line traces
+        
+
+    # Define custom tick values and labels for the x-axis
+    custom_tick_values = [-11, -35, -59, -83, -107, -131, -155, -179, -203, -227]
+    custom_tick_labels = ["2022", "2020", "2018", "2016", "2014", "2012", "2010", "2008", "2006", "2004"]
+
+# Update the x-axis with the custom tick values and labels
+    fig.update_xaxes(
+    tickvals=custom_tick_values,
+    ticktext=custom_tick_labels
+)
+
     fig.update_layout(
         title=f"Number of active children's homes ({selected_local_authority}, {selected_homes_or_places})",
         xaxis_title='Year',
-        yaxis_title="Number of Children's homes",
+        yaxis_title=f"Number of Children's residential{selected_homes_or_places}",
     )
     return fig
+
+
+
+
+@app.callback(Output('outsourcing-map', 'figure'),Input('variable-dropdown', 'value'))
+def update_plot(selected_variable):
+
+     
+
+    filtered_merged = merged2[merged2['variable']==selected_variable]
+
+    min_value = filtered_merged['variable'].min()
+    max_value = filtered_merged['variable'].max()
+
+    
+
+    map = px.choropleth_mapbox(filtered_merged, geojson=filtered_merged.geometry, locations=filtered_merged.index, color='percent',
+                            color_continuous_scale='ylorrd', center={"lat": 52.9781, "lon": -1.82360},
+                            mapbox_style='open-street-map',
+                            hover_name = 'LA_Name', zoom=6)
+
+    
+    return map
+
+
+
 
 
 
@@ -818,5 +932,129 @@ if __name__ == '__main__':
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
+
+
+#app = dash.Dash(__name__)
+
+app.layout = html.Div([
+    html.H1("Number of active children's homes"),
+    dcc.Graph(id='scatter-plot'),
+    dcc.Dropdown(
+        id='LA-dropdown',
+        options=[
+            {'label': hop, 'value': hop} for hop in la_df['LA_Name'].unique()
+        ],
+        value=None
+    )
+])
+
+@app.callback(
+        Output('scatter-plot', 'figure'),
+        Input('LA-dropdown', 'value'))
+def update_scatter_plot(selected_county):
+#    filtered_df = la_df[la_df['variable']=="Private provision"][la_df['LA_Name'] == selected_county]
+
+    if selected_county is None:
+        filtered_df = la_df[la_df['variable']=="Private provision"][['LA_Name','year' ,'percent']]
+    else:
+        filtered_df = la_df[la_df['variable']=="Private provision"][la_df['LA_Name'] == selected_county]
+
+    fig1 = px.scatter(filtered_df, x='year', y='percent', color='percent', trendline='lowess',
+                     color_continuous_scale='ylorrd')
+    fig1.update_traces(marker=dict(size=5))
+    fig1.update_layout(xaxis_title='Year',        yaxis_title='For-profit placements (%)',        title='Percent of children placed with for-profit providers 2011-22',        coloraxis_colorbar=dict(title='For-profit %')    )
+    
+    return fig1
+
+if __name__ == '__main__':
+    app.run_server(host='localhost',port=8005)
 
 
