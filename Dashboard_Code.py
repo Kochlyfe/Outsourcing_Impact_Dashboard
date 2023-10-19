@@ -363,77 +363,12 @@ import plotly.graph_objects as go
 import numpy as np
 
 
-data = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/childrens_social_care_data/main/Final_Data/outputs/active_chomes_2023.csv", encoding='ISO-8859-1')
-
-# Create a unique circle identifier for each 'Overall.experiences'
-data['Circle'] = data.groupby('Overall.experiences.and.progress.of.children.and.young.people').ngroup()
-
-# Define the custom order for 'Overall.experiences'
-custom_order = ['Outstanding', 'Good', 'Requires improvement to be good', 'Inadequate']
-
-# Create a Categorical data type with the desired order
-data['Overall_Experiences_Mapping'] = pd.Categorical(data['Overall.experiences.and.progress.of.children.and.young.people'], categories=custom_order, ordered=True)
-
-# Define a function to add points within a circle
-def add_points_in_circle(group):
-    radius = 0.4  # Adjust this value to control the radius of the circles
-
-    # Calculate the number of points based on the total number of rows in the group
-    num_points = len(group)
-
-    # Generate random angles and radii within the circle for each group
-    theta = np.linspace(0, 2 * np.pi, num_points)
-    r = np.sqrt(np.random.uniform(0, 1, num_points)) * radius
-
-    group['Jittered_x'] = group['Circle'] + r * np.cos(theta)
-    group['Jittered_y'] = group['Overall_Experiences_Mapping'].cat.codes + r * np.sin(theta)
-    return group
-
-# Apply the point addition function to each group
-data = data.groupby('Circle').apply(add_points_in_circle).reset_index(drop=True)
-
-# Create a bubble chart with perfectly filled huge bubbles filled with jittered points in both dimensions
-fig = px.scatter(data, x='Jittered_x', y='Jittered_y',
-                 color='Sector',
-                 hover_name='Organisation.which.owns.the.provider',
-                 hover_data=['Places', 'Registration.date', 'Local.authority', 'Sector'],
-                 labels={'Sector': 'Sector'},
-                 title="Active Children's Homes - as of March 2023")
-
-# Update the size and opacity of the bubbles
-marker_size = 5
-fig.update_traces(marker=dict(size=marker_size, opacity=0.5))
-
-# Remove the axes, background, and labels
-fig.update_xaxes(showline=False, showgrid=False, showticklabels=False, title_text='')
-fig.update_yaxes(showline=False, showgrid=False, showticklabels=False, title_text='')
-
-# Add labels for each group
-for group, group_data in data.groupby('Circle'):
-    # Calculate the position for the label above the group
-    x_label = group_data['Jittered_x'].mean()
-    y_label = group_data['Jittered_y'].max() + 0.1  # Adjust the vertical position as needed
-
-    # Add a text annotation to the figure
-    fig.add_annotation(
-        x=x_label,
-        y=y_label,
-        text=str(group_data['Overall_Experiences_Mapping'].cat.categories[0]),
-        showarrow=False,
-        font=dict(size=14),
-        opacity=0.7
-    )
-
-# Show the plot
-fig.show()
 
 
 
 
 
-
-
-
+active_chomes = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/childrens_social_care_data/main/Final_Data/outputs/active_chomes_2023.csv", encoding='ISO-8859-1')
 
 
 
@@ -711,36 +646,28 @@ def render_page_1_content(tab):
 
 @app.callback(Output('page-2-tabs-content', 'children'), [Input('page-2-tabs', 'value')])
 def render_page_2_content(tab):
-    if tab == 'tab-4':
+    if tab == 'tab-5':
         return  html.Div([
-            html.H3('See the changes to outcomes for children in care over time in your area:'),
+            html.H3('Ofsted ratings of active children homes:'),
             html.Hr(),
-            html.H6('Select a Local Authority:'),
-            html.Hr(),
-            dcc.Dropdown(
-                id='LA_dropdown2',
-                options=[{'label': geog_n, 'value': geog_n} for geog_n in la_df_long['geog_n'].unique()],
-                value=None,
-                placeholder='Select a Local Authority'
-            ),
-            html.Hr(),
-            html.H6('Select an outcome:'),
+            html.H6('Select an inspection domain:'),
             html.Hr(),
             dcc.Dropdown(
-                id='variable-dropdown',
-                options=[{'label': Variable, 'value': Variable} for Variable in la_df_long['Variable'].unique()],
-                value=None,
-                placeholder='Select a Variable'
+                id='domain-dropdown',
+                options=[{'label': geog_n, 'value': geog_n} for geog_n in active_chomes['Domain'].unique()],
+                value='Overall.experiences.and.progress.of.children.and.young.people',
+                placeholder='Select an inspection domain'
             ),
-            dcc.Graph(id='double-drop')
+            html.Hr(),
+            dcc.Graph(id='ofsted-plot',style={'height': '800px'})
         ])
-    elif tab == 'tab-5':
+    elif tab == 'tab-6':
         return html.Div([
             html.H3('Find out which counties have high emissions and mortalities:'),
             dcc.Graph(id='Health visualisation', figure=tab5_fig)
 
         ])
-    elif tab == 'tab-6':
+    elif tab == 'tab-7':
         return  html.Div([
             html.H3('Find out which counties have high emissions and mortalities:'),
             dcc.Dropdown(
@@ -931,23 +858,90 @@ def update_plot(selected_variable):
 
 
 
-@app.callback(Output('double-drop', 'figure'), [Input('LA_dropdown2', 'value'), Input('variable-dropdown', 'value')])
-def update_scatter_plot(selected_county, selected_variable):
-    if selected_county is None:
-        filtered_df_dd = la_df_long[la_df_long['Variable']=="Number of Children in Care"]
-    else:
-        filtered_df_dd = la_df_long[(la_df_long['geog_n'] == selected_county) & (la_df_long['Variable'] == selected_variable)]
+@app.callback(Output('ofsted-plot', 'figure'), Input('domain-dropdown', 'value'))
+def update_scatter_plot(selected_domain):
 
-    fig_dd = px.scatter(filtered_df_dd, x='year', y='Value', color='Value', trendline='lowess', color_continuous_scale='ylorrd')
-    fig_dd.update_traces(marker=dict(size=5))
-    fig_dd.update_layout(
-        xaxis_title='Year',
-        yaxis_title='Value',
-        title='Children in care outcomes 2011-22',
-        coloraxis_colorbar=dict(title='Value')
+    filtered_active_chomes =  active_chomes[active_chomes['Domain']==selected_domain]
+
+    # Create a unique circle identifier for each 'Overall.experiences'
+    filtered_active_chomes['Circle'] = filtered_active_chomes.groupby('Rating').ngroup()
+
+    # Define the custom order for 'Overall.experiences'
+    custom_order = [  'Inadequate','Requires improvement to be good', 'Good', 'Outstanding']
+
+    # Create a Categorical data type with the desired order
+    filtered_active_chomes['Overall_Experiences_Mapping'] = pd.Categorical(filtered_active_chomes['Rating'], categories=custom_order, ordered=True)
+
+    # Define a function to add points within a circle
+    def add_points_in_circle(group):
+        radius = 0.7  # Adjust this value to control the radius of the circles
+
+        # Calculate the number of points based on the total number of rows in the group
+        num_points = len(group)
+
+        # Generate random angles and radii within the circle for each group
+        theta = np.linspace(0, 2 * np.pi, num_points)
+        r = np.sqrt(np.random.uniform(0, 1, num_points)) * radius
+
+        group['Jittered_x'] = group['Circle'] + r * np.cos(theta)
+        group['Jittered_y'] = group['Overall_Experiences_Mapping'].cat.codes + r * np.sin(theta)
+        return group
+
+    # Apply the point addition function to each group
+    filtered_active_chomes = filtered_active_chomes.groupby('Circle').apply(add_points_in_circle).reset_index(drop=True)
+
+    # Create a bubble chart with perfectly filled huge bubbles filled with jittered points in both dimensions
+    ofsted_fig = px.scatter(filtered_active_chomes, x='Jittered_x', y='Jittered_y',
+                 color='Sector',
+                 hover_name = 'Organisation.which.owns.the.provider',
+                 custom_data=['Rating', 'Places', 'Registration.date', 'Local.authority', 'Sector'],
+                 labels={'Sector': 'Sector'},
+                 title="Active Children's Homes - as of March 2023")
+
+
+    hover_template = """
+    Owner: %{hovertext}<br>
+    Sector: %{customdata[4]}<br>
+    Rating: %{customdata[0]}<br>
+    Places: %{customdata[1]}<br>
+    Registration Date: %{customdata[2]}<br>
+    Local Authority: %{customdata[3]}<br>
+    """
+
+    ofsted_fig.update_traces(hovertemplate=hover_template)
+
+
+    # Update the size and opacity of the bubbles
+    marker_size = 5
+    ofsted_fig.update_traces(marker=dict(size=marker_size, opacity=0.7))
+
+    # Remove the axes, background, and labels
+    ofsted_fig.update_xaxes(showline=False, showgrid=False, showticklabels=False, title_text='')
+    ofsted_fig.update_yaxes(showline=False, showgrid=False, showticklabels=False, title_text='')
+    ofsted_fig.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)'  # Set the background color to transparent
     )
-    
-    return fig_dd
+
+    for group, group_data in filtered_active_chomes.groupby('Circle'):
+        # Calculate the position for the label above the group
+        x_label = group_data['Jittered_x'].mean()
+        y_label = group_data['Jittered_y'].max() + 0.1  # Adjust the vertical position as needed
+
+        # Get the mode (most common category) for the 'Overall_Experiences_Mapping' in the group
+        rating = group_data['Overall_Experiences_Mapping'].mode().iloc[0]
+
+        # Add a text annotation to the figure
+        ofsted_fig.add_annotation(
+            x=x_label,
+            y=y_label,
+            text=rating,
+            showarrow=False,
+            font=dict(size=14),
+            opacity=0.7
+        )
+
+
+    return ofsted_fig
 
 if __name__ == '__main__':
     app.run_server(host='localhost',port=8005)
@@ -1081,42 +1075,43 @@ if __name__ == '__main__':
 
 
 
-app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
-
-
-#app = dash.Dash(__name__)
-
-app.layout = html.Div([
-    html.H1("Number of active children's homes"),
-    dcc.Graph(id='scatter-plot'),
-    dcc.Dropdown(
-        id='LA-dropdown',
-        options=[
-            {'label': hop, 'value': hop} for hop in la_df['LA_Name'].unique()
-        ],
-        value=None
-    )
-])
-
-@app.callback(
-        Output('scatter-plot', 'figure'),
-        Input('LA-dropdown', 'value'))
-def update_scatter_plot(selected_county):
-#    filtered_df = la_df[la_df['variable']=="Private provision"][la_df['LA_Name'] == selected_county]
-
-    if selected_county is None:
-        filtered_df = la_df[la_df['variable']=="Private provision"][['LA_Name','year' ,'percent']]
-    else:
-        filtered_df = la_df[la_df['variable']=="Private provision"][la_df['LA_Name'] == selected_county]
-
-    fig1 = px.scatter(filtered_df, x='year', y='percent', color='percent', trendline='lowess',
-                     color_continuous_scale='ylorrd')
-    fig1.update_traces(marker=dict(size=5))
-    fig1.update_layout(xaxis_title='Year',        yaxis_title='For-profit placements (%)',        title='Percent of children placed with for-profit providers 2011-22',        coloraxis_colorbar=dict(title='For-profit %')    )
-    
-    return fig1
-
-if __name__ == '__main__':
-    app.run_server(host='localhost',port=8005)
-
-
+#app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
+#
+#
+##app = dash.Dash(__name__)
+#
+#app.layout = html.Div([
+#    html.H1("Number of active children's homes"),
+#    dcc.Graph(id='scatter-plot'),
+#    dcc.Dropdown(
+#        id='LA-dropdown',
+#        options=[
+#            {'label': hop, 'value': hop} for hop in la_df['LA_Name'].unique()
+#        ],
+#        value=None
+#    )
+#])
+#
+#@app.callback(
+#        Output('scatter-plot', 'figure'),
+#        Input('LA-dropdown', 'value'))
+#def update_scatter_plot(selected_county):
+##    filtered_df = la_df[la_df['variable']=="Private provision"][la_df['LA_Name'] == selected_county]
+#
+#    if selected_county is None:
+#        filtered_df = la_df[la_df['variable']=="Private provision"][['LA_Name','year' ,'percent']]
+#    else:
+#        filtered_df = la_df[la_df['variable']=="Private provision"][la_df['LA_Name'] == selected_county]
+#
+#    fig1 = px.scatter(filtered_df, x='year', y='percent', color='percent', trendline='lowess',
+#                     color_continuous_scale='ylorrd')
+#    fig1.update_traces(marker=dict(size=5))
+#    fig1.update_layout(xaxis_title='Year',        yaxis_title='For-profit placements (%)',        title='Percent of children placed with for-profit providers 2011-22',        coloraxis_colorbar=dict(title='For-profit %')    )
+#    
+#    return fig1
+#
+#if __name__ == '__main__':
+#    app.run_server(host='localhost',port=8005)
+#
+#
+#
