@@ -29,6 +29,7 @@ from plotly.colors import sequential
 
 
 
+pd.set_option('display.max_rows', None)
 
 
 ####HEALTHY CAKES####
@@ -95,9 +96,9 @@ merged2 = merged[(merged['variable'] == 'Private provision') |
 ((merged['variable'] == 'Places') & (merged['subcategory'] == "Private"))
 ]
 
-merged2.loc[(merged2['variable'] == 'Places') & (merged2['subcategory'] == "Private"), 'variable'] = "For-profit Children's Homes Places (%)"
-merged2.loc[merged2['variable'] == 'Private provision', 'variable'] = "For-profit Placements (%)"
-merged2.loc[(merged2['variable'] == 'Total Children Looked After') & (merged2['subcategory'] == "For_profit"), 'variable'] = "For-profit Expenditure (%)"
+merged2.loc[(merged2['variable'] == 'Places') & (merged2['subcategory'] == "Private"), 'variable'] = "For-profit Children's Homes Places (%, 2023)"
+merged2.loc[merged2['variable'] == 'Private provision', 'variable'] = "For-profit Placements (%, 2022)"
+merged2.loc[(merged2['variable'] == 'Total Children Looked After') & (merged2['subcategory'] == "For_profit"), 'variable'] = "For-profit Expenditure (%, 2022)"
    
 
 
@@ -374,6 +375,142 @@ active_chomes = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/childr
 
 
 
+outcomes_df = la_df[
+    (la_df['subcategory'] == 'health and criminalisation') |
+    (la_df['subcategory'] == 'ks2') |
+    (la_df['subcategory'] == 'ks4') |
+    (la_df['subcategory'] == 'key stage 2') |
+    (la_df['subcategory'] == 'key stage 4') |
+    (la_df['subcategory'] == 'school absence') |
+    (la_df['subcategory'] == 'school exclusion') |
+    (la_df['subcategory'] == 'missing incidents') |
+    (la_df['subcategory'] == 'Reason episode ceased') |
+    (la_df['category'] == 'care leavers')
+]
+
+
+outcomes_df['variable'].value_counts()
+
+
+
+
+outcomes_df = outcomes_df[
+    (outcomes_df['variable'] == 'sess_unauthorised') | #unauthorised absence
+    (outcomes_df['variable'] == 'one_plus_sus') | # suspension
+    (outcomes_df['variable'] == 'pupils_pa_10_exact') | # persitent absence
+    (outcomes_df['variable'] == 'rwm_met_expected_standard') | 
+    (outcomes_df['variable'] == 'gps_met_expected_standard') | 
+    (outcomes_df['variable'] == 'writta_met_expected_standard') | 
+    (outcomes_df['variable'] == 'read_met_expected_standard') | 
+    (outcomes_df['variable'] == 'mat_met_expected_standard') | 
+    (outcomes_df['variable'] == 'p8score') | 
+    (outcomes_df['variable'] == 'att8') | 
+    (outcomes_df['variable'] == 'Accommodation considered not suitable') | 
+    (outcomes_df['variable'] == 'Local authority not in touch with care leaver') | 
+    (outcomes_df['variable'] == 'Total not in education employment or training') | 
+    (outcomes_df['variable'] == 'In custody') | 
+    (outcomes_df['variable'] == 'Percentage of children who had a missing incident during the year') | 
+    (outcomes_df['variable'] == 'Percentage of children who were away from placement without authorisation during the year') | 
+    (outcomes_df['subcategory'] == 'Reason episode ceased') |
+    (outcomes_df['subcategory'] == 'health and criminalisation') 
+
+]
+
+
+outcomes_df = outcomes_df[
+    (outcomes_df['variable'] != 'Total') &
+    (outcomes_df['variable'] != 'Total ages 0 to 4 years') &
+    (outcomes_df['variable'] != 'Total all ages') &
+    (outcomes_df['variable'] != 'Total ages 5 to 16 years')
+]
+
+
+
+outcomes_df['LA_Name'].value_counts()
+
+
+
+outcomes_df.loc[outcomes_df['subcategory'] == 'ks2', 'subcategory'] = "Key stage 2"
+outcomes_df.loc[outcomes_df['subcategory'] == 'key stage 2', 'subcategory'] = "Key stage 2"
+outcomes_df.loc[outcomes_df['subcategory'] == 'ks4', 'subcategory'] = "Key stage 4"
+outcomes_df.loc[outcomes_df['subcategory'] == 'key stage 4', 'subcategory'] = "Key stage 4"
+outcomes_df.loc[outcomes_df['subcategory'] == 'health and criminalisation', 'subcategory'] = "Health and criminalisation"
+outcomes_df.loc[outcomes_df['subcategory'] == 'school absence', 'subcategory'] = "School absence"
+outcomes_df.loc[outcomes_df['subcategory'] == 'school exclusion', 'subcategory'] = "School absence"
+outcomes_df.loc[outcomes_df['subcategory'] == '19 to 21 years', 'subcategory'] = "Care leavers (19 to 21)"
+outcomes_df.loc[outcomes_df['subcategory'] == 'Aged 19 to 21', 'subcategory'] = "Care leavers (19 to 21)"
+outcomes_df.loc[outcomes_df['subcategory'] == 'Aged 17 to 18', 'subcategory'] = "Care leavers (17 to 18)"
+outcomes_df.loc[outcomes_df['subcategory'] == '17 to 18 years', 'subcategory'] = "Care leavers (17 to 18)"
+
+
+outcomes_df['variable'].value_counts()
+
+
+outcomes_df.loc[outcomes_df['variable'] == 'pupils_pa_10_exact', 'variable'] = "Persistent absence"
+outcomes_df.loc[outcomes_df['variable'] == 'sess_unauthorised', 'variable'] = "Unauthorised absent sessions"
+outcomes_df.loc[outcomes_df['variable'] == 'mat_met_expected_standard', 'variable'] = "Met expected grades (Maths)"
+outcomes_df.loc[outcomes_df['variable'] == 'gps_met_expected_standard', 'variable'] = "Met expected grades (Grammar, punctuation and spelling)"
+outcomes_df.loc[outcomes_df['variable'] == 'read_met_expected_standard', 'variable'] = "Met expected grades (Reading)"
+outcomes_df.loc[outcomes_df['variable'] == 'writta_met_expected_standard', 'variable'] = "Met expected grades (Writting)"
+outcomes_df.loc[outcomes_df['variable'] == 'rwm_met_expected_standard', 'variable'] = "Met expected grades (Reading, writing & maths)"
+outcomes_df.loc[outcomes_df['variable'] == 'p8score', 'variable'] = "Average progress 8 score"
+outcomes_df.loc[outcomes_df['variable'] == 'att8', 'variable'] = "Average attainment 8 score"
+outcomes_df.loc[outcomes_df['variable'] == 'Percentage of children who were away from placement without authorisation during the year', 'variable'] = "Away from placement during year"
+outcomes_df.loc[outcomes_df['variable'] == 'Percentage of children who had a missing incident during the year', 'variable'] = "Missing from placement during year"
+outcomes_df.loc[outcomes_df['variable'] == 'one_plus_sus', 'variable'] = "At least one suspension"
+
+outcomes_df.loc[outcomes_df['variable'] == "Away from placement during year", 'percent'] = outcomes_df['number']
+outcomes_df.loc[outcomes_df['variable'] == "Missing from placement during year", 'percent'] = outcomes_df['number']
+
+
+outcomes_df = outcomes_df.dropna(subset=['percent'])
+
+outcomes_df['LA_Name'].value_counts()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -577,6 +714,8 @@ def render_page_1_content(tab):
                  options=[
                      {'label': hop, 'value': hop} for hop in la_df[la_df['variable']=="Private provision"]['LA_Name'].unique()
                      ],
+                placeholder='All Local Authorities',
+
                  value=None
                  ),
                dcc.Graph(id='scatter-plot'),
@@ -591,8 +730,8 @@ def render_page_1_content(tab):
                 options=[
                      {'label': hop, 'value': hop} for hop in la_df[(la_df['category']=="Expenditure") & (la_df['subcategory']=="For_profit")]['LA_Name'].unique()
                      ],
-                value=la_df[(la_df['category']=="Expenditure") & (la_df['subcategory']=="For_profit")]['LA_Name'].unique()[0],
-                placeholder='Select a Local Authority',
+                value=None,
+                placeholder='All Local Authorities',
                 style={'width': '600px', 'margin-bottom': '20px'}
             ),
             html.H3("Select an area of expenditure"),
@@ -648,7 +787,7 @@ def render_page_1_content(tab):
 def render_page_2_content(tab):
     if tab == 'tab-5':
         return  html.Div([
-            html.H3('Ofsted ratings of active children homes:'),
+            html.H1('Ofsted ratings of active children homes:'),
             html.Hr(),
             html.H6('Select an inspection domain:'),
             html.Hr(),
@@ -663,7 +802,26 @@ def render_page_2_content(tab):
         ])
     elif tab == 'tab-6':
         return html.Div([
-            html.H3('Find out which counties have high emissions and mortalities:'),
+            html.H1('Outcomes for children in care and care leavers'),
+            dcc.Dropdown(
+                id='la-dropdown4',
+                options=[{'label': geog_n, 'value': geog_n} for geog_n in active_chomes['Domain'].unique()],
+                value='Overall.experiences.and.progress.of.children.and.young.people',
+                placeholder='Select an inspection domain'
+            ),
+            dcc.Dropdown(
+                id='category-dropdown4',
+                options=[{'label': geog_n, 'value': geog_n} for geog_n in active_chomes['Domain'].unique()],
+                value='Overall.experiences.and.progress.of.children.and.young.people',
+                placeholder='Select an inspection domain'
+            ),
+            dcc.Dropdown(
+                id='variable-dropdown4',
+                options=[{'label': geog_n, 'value': geog_n} for geog_n in active_chomes['Domain'].unique()],
+                value='Overall.experiences.and.progress.of.children.and.young.people',
+                placeholder='Select an inspection domain'
+            ),
+
             dcc.Graph(id='Health visualisation', figure=tab5_fig)
 
         ])
@@ -771,10 +929,15 @@ def update_scatter_plot(selected_county):
 @app.callback(Output('scatter-plot2', 'figure'), Input('LA-dropdown3', 'value'), Input('spend-dropdown', 'value'))
 
 def update_scatter_plot(selected_county, selected_expenditure):
-    filtered_df_spend = la_df[(la_df['category'] == "Expenditure") & 
-                          (la_df['subcategory'] == "For_profit") & 
-                          (la_df['LA_Name'] == selected_county) & 
-                          (la_df['variable'] == selected_expenditure)]
+    if selected_county is None or selected_county == "":
+        filtered_df_spend = la_df[(la_df['category'] == "Expenditure") & 
+                                  (la_df['subcategory'] == "For_profit") & 
+                                  (la_df['variable'] == selected_expenditure)]
+    else:
+        filtered_df_spend = la_df[(la_df['category'] == "Expenditure") & 
+                                  (la_df['subcategory'] == "For_profit") & 
+                                  (la_df['LA_Name'] == selected_county) & 
+                                  (la_df['variable'] == selected_expenditure)]
     
     fig2 = px.scatter(filtered_df_spend, x='year', y='percent', color='percent', trendline='lowess',
                      color_continuous_scale='ylorrd')
@@ -874,7 +1037,7 @@ def update_scatter_plot(selected_domain):
 
     # Define a function to add points within a circle
     def add_points_in_circle(group):
-        radius = 0.7  # Adjust this value to control the radius of the circles
+        radius = 0.9  # Adjust this value to control the radius of the circles
 
         # Calculate the number of points based on the total number of rows in the group
         num_points = len(group)
@@ -912,7 +1075,7 @@ def update_scatter_plot(selected_domain):
 
 
     # Update the size and opacity of the bubbles
-    marker_size = 5
+    marker_size = 6
     ofsted_fig.update_traces(marker=dict(size=marker_size, opacity=0.7))
 
     # Remove the axes, background, and labels
@@ -925,7 +1088,7 @@ def update_scatter_plot(selected_domain):
     for group, group_data in filtered_active_chomes.groupby('Circle'):
         # Calculate the position for the label above the group
         x_label = group_data['Jittered_x'].mean()
-        y_label = group_data['Jittered_y'].max() + 0.1  # Adjust the vertical position as needed
+        y_label = group_data['Jittered_y'].max() + 0.12  # Adjust the vertical position as needed
 
         # Get the mode (most common category) for the 'Overall_Experiences_Mapping' in the group
         rating = group_data['Overall_Experiences_Mapping'].mode().iloc[0]
@@ -936,8 +1099,8 @@ def update_scatter_plot(selected_domain):
             y=y_label,
             text=rating,
             showarrow=False,
-            font=dict(size=14),
-            opacity=0.7
+            font=dict(size=16),
+            opacity=0.9
         )
 
 
