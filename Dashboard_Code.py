@@ -443,7 +443,7 @@ outcomes_df.loc[outcomes_df['subcategory'] == 'Aged 17 to 18', 'subcategory'] = 
 outcomes_df.loc[outcomes_df['subcategory'] == '17 to 18 years', 'subcategory'] = "Care leavers (17 to 18)"
 
 
-outcomes_df['variable'].value_counts()
+outcomes_df['subcategory'].value_counts()
 
 
 outcomes_df.loc[outcomes_df['variable'] == 'pupils_pa_10_exact', 'variable'] = "Persistent absence"
@@ -469,14 +469,11 @@ outcomes_df['LA_Name'].value_counts()
 
 
 
+#keep only LAs with a 100 obs
 
+outcomes_df = outcomes_df[outcomes_df['LA_Name'].map(outcomes_df['LA_Name'].value_counts()) > 100]
 
-
-
-
-
-
-
+outcomes_df['percent'] = pd.to_numeric(outcomes_df['percent'], errors='coerce')
 
 
 
@@ -803,26 +800,29 @@ def render_page_2_content(tab):
     elif tab == 'tab-6':
         return html.Div([
             html.H1('Outcomes for children in care and care leavers'),
+            html.H3('Select a Local Authority'),
             dcc.Dropdown(
                 id='la-dropdown4',
-                options=[{'label': geog_n, 'value': geog_n} for geog_n in active_chomes['Domain'].unique()],
-                value='Overall.experiences.and.progress.of.children.and.young.people',
-                placeholder='Select an inspection domain'
+                options=[{'label': geog_n, 'value': geog_n} for geog_n in outcomes_df['LA_Name'].unique()],
+                value=None,
+                placeholder='All'
             ),
+            html.H3("Select a subcategory"),
             dcc.Dropdown(
-                id='category-dropdown4',
-                options=[{'label': geog_n, 'value': geog_n} for geog_n in active_chomes['Domain'].unique()],
-                value='Overall.experiences.and.progress.of.children.and.young.people',
-                placeholder='Select an inspection domain'
-            ),
-            dcc.Dropdown(
-                id='variable-dropdown4',
-                options=[{'label': geog_n, 'value': geog_n} for geog_n in active_chomes['Domain'].unique()],
-                value='Overall.experiences.and.progress.of.children.and.young.people',
-                placeholder='Select an inspection domain'
+                id='subcategory-dropdown4',
+                options=[{'label': geog_n, 'value': geog_n} for geog_n in outcomes_df['subcategory'].unique()],
+                value='Health and criminalisation',
+                placeholder='Select a subcategory'
             ),
 
-            dcc.Graph(id='Health visualisation', figure=tab5_fig)
+            html.H3("Select a variable"),
+            dcc.Dropdown(
+                id='variable-dropdown4',
+                options=variable_options,  # Add this line to populate initial options
+                placeholder='Select a variable',
+            ),
+
+            dcc.Graph(id='outcome_plot')
 
         ])
     elif tab == 'tab-7':
@@ -1106,6 +1106,61 @@ def update_scatter_plot(selected_domain):
 
     return ofsted_fig
 
+
+
+
+
+@app.callback(Output('variable-dropdown4', 'options'), Input('subcategory-dropdown4', 'value'))
+def update_variable_options(selected_subcategory):
+    if selected_subcategory:
+        # Filter the DataFrame based on the selected subcategory
+        filtered_df = outcomes_df[outcomes_df['subcategory'] == selected_subcategory]
+
+        # Get the unique variable options from the filtered DataFrame
+        variable_options = [{'label': variable, 'value': variable} for variable in filtered_df['variable'].unique()]
+    else:
+        variable_options = []  # No options if no subcategory is selected
+
+    return variable_options
+
+
+
+
+
+
+
+
+@app.callback(Output('outcome_plot', 'figure'), Input('la-dropdown4', 'value'), Input('subcategory-dropdown4', 'value'), Input('variable-dropdown4', 'value'))
+def update_outcome_plot(selected_county, selected_subcategory, selected_variable):
+    print("Selected County:", selected_county)
+    print("Selected Subcategory:", selected_subcategory)
+    print("Selected Variable:", selected_variable)
+
+    # Filter the data based on the selected values
+    if selected_county is None or selected_county == "":
+        filtered_df_outcome = outcomes_df[(outcomes_df['subcategory'] == selected_subcategory) & 
+                                          (outcomes_df['variable'] == selected_variable)].copy()
+    else:
+        filtered_df_outcome = outcomes_df[(outcomes_df['subcategory'] == selected_subcategory) & 
+                                          (outcomes_df['LA_Name'] == selected_county) & 
+                                          (outcomes_df['variable'] == selected_variable)].copy()
+
+    print("Filtered Data:")
+    print(filtered_df_outcome)
+
+    outcome_plot = px.scatter(filtered_df_outcome, x='year', y='percent', color='percent', trendline='lowess',color_continuous_scale='ylorrd')
+    outcome_plot.update_traces(marker=dict(size=5))
+    outcome_plot.update_layout(
+        xaxis_title='Year',
+        yaxis_title='For-profit expenditure (%)',
+        title='Outcomes for children in care',
+        coloraxis_colorbar=dict(title=selected_variable)
+    )
+
+    return outcome_plot
+
+
+
 if __name__ == '__main__':
     app.run_server(host='localhost',port=8005)
 
@@ -1278,3 +1333,49 @@ if __name__ == '__main__':
 #
 #
 #
+
+
+
+
+
+
+
+
+#
+#@app.callback(Output('outcome_plot', 'figure'), Input('LA-dropdown4', 'value'), Input('subcategory-dropdown4', 'value'), Input('variable-dropdown4', 'value'))
+#def update_scatter_plot(selected_county, selected_subcategory, selected_variable):
+#    if selected_county is None or selected_county == "":
+#
+#
+#
+#
+#filtered_df_outcome = outcomes_df[(outcomes_df['subcategory'] == 'Health and criminalisation') & (outcomes_df['variable'] == 'SDQ score is a cause for concern')]
+#    else:
+#        filtered_df_outcome = outcomes_df[(outcomes_df['subcategory'] == selected_subcategory) & 
+#                                  (outcomes_df['LA_Name'] == selected_county) & 
+#                                  (outcomes_df['variable'] == selected_variable)]
+#    
+#outcome_plot = px.scatter(filtered_df_outcome, x='year', y='percent', color='percent', trendline='lowess',color_continuous_scale='ylorrd')
+#    outcome_plot.update_traces(marker=dict(size=5))
+#    outcome_plot.update_layout(
+#        xaxis_title='Year',
+#        yaxis_title='For-profit expenditure (%)',
+#        title='Outcomes for children in care',
+#        coloraxis_colorbar=dict(title=selected_variable)
+#    )
+#    
+#    return outcome_plot
+#
+
+
+
+
+
+
+
+
+
+
+
+
+
