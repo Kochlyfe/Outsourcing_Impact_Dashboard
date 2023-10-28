@@ -476,21 +476,43 @@ outcomes_df = outcomes_df[outcomes_df['LA_Name'].map(outcomes_df['LA_Name'].valu
 outcomes_df['percent'] = pd.to_numeric(outcomes_df['percent'], errors='coerce')
 
 
+#####placements quality#####
+
+
+placements_df = la_df[
+    (la_df['subcategory'] == 'Distance between home and placement and locality of placement') |
+    (la_df['subcategory'] == 'Reason for placement change during the year') |
+    #(la_df['subcategory'] == 'Placement') |
+    (la_df['subcategory'] == 'Locality of placement') |
+    (la_df['subcategory'] == 'LA of placement') |
+    (la_df['subcategory'] == 'Distance between home and placement') |
+    (la_df['subcategory'] == 'Mid-year moves') |
+    (la_df['subcategory'] == 'placement stability') #|
+    #(la_df['subcategory'] == 'Placed inside the local authority boundary') 
+]
+
+
+placements_df['variable'].value_counts()
+
+placements_df = placements_df[
+    (placements_df['variable'] != 'Total') &
+    (placements_df['variable'] != 'Total placements changing') &
+    (placements_df['variable'] != 'Total children')
+]
+
+
+placements_df = placements_df.dropna(subset=['percent'])
+
+placements_df['LA_Name'].value_counts()
+
+placements_df = placements_df[placements_df['LA_Name'].map(placements_df['LA_Name'].value_counts()) > 104]
+
+placements_df['percent'] = pd.to_numeric(placements_df['percent'], errors='coerce')
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+variable_options = []  # No options if no subcategory is selected
+variable_options2 = []  # No options if no subcategory is selected
 
 
 
@@ -546,6 +568,7 @@ from dash import dash_table
 from dash import State
 import reverse_geocoder as rg
 from dash.dependencies import Input, Output, State, MATCH
+from dash.exceptions import PreventUpdate
 
 
 
@@ -826,30 +849,79 @@ def render_page_2_content(tab):
 
         ])
     elif tab == 'tab-7':
-        return  html.Div([
-            html.H3('Find out which counties have high emissions and mortalities:'),
+        return html.Div([
+            html.H1('Quality of placements'),
+            html.H3('Select a Local Authority'),
             dcc.Dropdown(
-                id='race-dropdown',
-                options=[{'label': race, 'value': race} for race in tab6_df['Single Race 6'].unique()],
+                id='la-dropdown5',
+                options=[{'label': geog_n, 'value': geog_n} for geog_n in placements_df['LA_Name'].unique()],
                 value=None,
-                placeholder='Select a race'
+                placeholder='All'
             ),
-            dcc.Graph(id='tab6-plot')            
+            html.H3("Select a subcategory"),
+            dcc.Dropdown(
+                id='subcategory-dropdown5',
+                options=[{'label': geog_n, 'value': geog_n} for geog_n in placements_df['subcategory'].unique()],
+                value='Locality of placement',
+                placeholder='Select a subcategory'
+            ),
+
+            html.H3("Select a variable"),
+            dcc.Dropdown(
+                id='variable-dropdown5',
+                options=variable_options2,  # Add this line to populate initial options
+                placeholder='Select a variable',
+            ),
+
+            dcc.Graph(id='placement_plot')
+
         ])
-
-
-
 
 @app.callback(Output('page-3-tabs-content', 'children'), [Input('page-3-tabs', 'value')])
 def render_page_3_content(tab):
     if tab == 'tab-8':
+        return html.Div([
+            dcc.Dropdown(
+                id='la-dropdown6',
+                options=[{'label': la, 'value': la} for la in outcomes_df['LA_Name'].unique()],
+                multi=True,
+                placeholder='Select LA_Name(s)'
+           ),
+            dcc.Dropdown(
+                id='subcategory-dropdown6',
+                options=[{'label': subcat, 'value': subcat} for subcat in outcomes_df['subcategory'].unique()],
+                placeholder='Select Subcategory'
+            ),
+           dcc.Dropdown(
+               id='variable-dropdown6',
+               placeholder='Select Variable'
+           ),
+           dcc.Graph(id='compare_plot'),
+           dcc.Slider(
+               id='year-slider',
+               min=outcomes_df['year'].min(),
+               max=outcomes_df['year'].max(),
+               step=1,
+               value=outcomes_df['year'].min(),
+               marks={str(year): str(year) for year in outcomes_df['year'].unique()}
+           )
+])
+    else:
+        raise PreventUpdate
+
+
+
+
+@app.callback(Output('page-4-tabs-content', 'children'), [Input('page-4-tabs', 'value')])
+def render_page_4_content(tab):
+    if tab == 'tab-9':
         return  html.Div([
             html.H3('Data Downloads:'),
             html.P('You can access to three different files: Data at the lat/lon scale, county scale or state scale:'),
             html.Ul([
                 html.Li(html.A("Download Data with for LAs", href="https://raw.githubusercontent.com/BenGoodair/Outsourcing_Impact_Dashboard/main/Data/dashboard_LA_data_long.csv"))])  
          ])
-    elif tab == 'tab-9':
+    elif tab == 'tab-10':
         return html.Div([
             html.H3("Links to Resources"),
 
@@ -863,7 +935,7 @@ def render_page_3_content(tab):
             html.H6("Research on outsourcing of healthcare"),
             html.H6("Research from outside the UK")
         ])
-    elif tab == 'tab-10':
+    elif tab == 'tab-11':
         return html.Div([
             html.H3("Meet the team:"),
             html.Ul([
@@ -1108,7 +1180,7 @@ def update_scatter_plot(selected_domain):
 
 
 
-
+variable_options = []  # No options if no subcategory is selected
 
 @app.callback(Output('variable-dropdown4', 'options'), Input('subcategory-dropdown4', 'value'))
 def update_variable_options(selected_subcategory):
@@ -1152,12 +1224,84 @@ def update_outcome_plot(selected_county, selected_subcategory, selected_variable
     outcome_plot.update_traces(marker=dict(size=5))
     outcome_plot.update_layout(
         xaxis_title='Year',
-        yaxis_title='For-profit expenditure (%)',
+        yaxis_title='(%)',
         title='Outcomes for children in care',
         coloraxis_colorbar=dict(title=selected_variable)
     )
 
     return outcome_plot
+
+
+
+
+variable_options2 = []  # No options if no subcategory is selected
+
+@app.callback(Output('variable-dropdown5', 'options'), Input('subcategory-dropdown5', 'value'))
+def update_variable_options(selected_subcategory):
+    if selected_subcategory:
+        # Filter the DataFrame based on the selected subcategory
+        filtered_df = placements_df[placements_df['subcategory'] == selected_subcategory]
+
+        # Get the unique variable options from the filtered DataFrame
+        variable_options2 = [{'label': variable, 'value': variable} for variable in filtered_df['variable'].unique()]
+    else:
+        variable_options2 = []  # No options if no subcategory is selected
+
+    return variable_options2
+
+
+
+
+
+
+@app.callback(Output('placement_plot', 'figure'), Input('la-dropdown5', 'value'), Input('subcategory-dropdown5', 'value'), Input('variable-dropdown5', 'value'))
+def update_outcome_plot(selected_county, selected_subcategory, selected_variable):
+    print("Selected County:", selected_county)
+    print("Selected Subcategory:", selected_subcategory)
+    print("Selected Variable:", selected_variable)
+
+    # Filter the data based on the selected values
+    if selected_county is None or selected_county == "":
+        filtered_df_placement = placements_df[(placements_df['subcategory'] == selected_subcategory) & 
+                                          (placements_df['variable'] == selected_variable)].copy()
+    else:
+        filtered_df_placement = placements_df[(placements_df['subcategory'] == selected_subcategory) & 
+                                          (placements_df['LA_Name'] == selected_county) & 
+                                          (placements_df['variable'] == selected_variable)].copy()
+
+    #print("Filtered Data:")
+    #print(filtered_df_placement)
+
+    placement_plot = px.scatter(filtered_df_placement, x='year', y='percent', color='percent', trendline='lowess',color_continuous_scale='ylorrd')
+    placement_plot.update_traces(marker=dict(size=5))
+    placement_plot.update_layout(
+        xaxis_title='Year',
+        yaxis_title='(%)',
+        title='Placements for children in care',
+        coloraxis_colorbar=dict(title=selected_variable)
+    )
+
+    return placement_plot
+
+
+
+# Add a new callback to update the comparison plot
+@app.callback(Output('comparison-plot', 'figure'),Input('local-authority-dropdown-1', 'value'), Input('variable-dropdown-3', 'value'))
+def update_comparison_plot(selected_local_authorities, selected_variable):
+    if len(selected_local_authorities) != 2:
+        raise PreventUpdate
+
+    filtered_df = la_df[(la_df['variable'] == selected_variable) &
+                       (la_df['LA_Name'].isin(selected_local_authorities))]
+
+    fig = px.scatter(filtered_df, x='LA_Name', y='percent', color='LA_Name')
+    fig.update_layout(
+        xaxis_title='Local Authorities',
+        yaxis_title=selected_variable,
+        title=f'Comparison of {selected_variable} between {selected_local_authorities[0]} and {selected_local_authorities[1]}',
+    )
+
+    return fig
 
 
 
