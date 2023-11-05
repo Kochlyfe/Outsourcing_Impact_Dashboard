@@ -389,8 +389,10 @@ outcomes_df = la_df[
 ]
 
 
-outcomes_df['variable'].value_counts()
-
+#outcomes_df['variable'].value_counts()
+#outcomes_df[outcomes_df['category'] == 'care leavers']['year'].value_counts().sort_index()
+#outcomes_df[(outcomes_df['category'] == 'care leavers') & (outcomes_df['year'] == 2014)]
+#la_df[(la_df['category'] == 'Expenditure') & (la_df['year'] == 2014)]
 
 
 
@@ -405,9 +407,12 @@ outcomes_df = outcomes_df[
     (outcomes_df['variable'] == 'mat_met_expected_standard') | 
     (outcomes_df['variable'] == 'p8score') | 
     (outcomes_df['variable'] == 'att8') | 
-    (outcomes_df['variable'] == 'Accommodation considered not suitable') | 
+    (outcomes_df['variable'] == 'Accommodation considered suitable') | 
     (outcomes_df['variable'] == 'Local authority not in touch with care leaver') | 
     (outcomes_df['variable'] == 'Total not in education employment or training') | 
+    (outcomes_df['variable'] == 'Not in education training or employment, owing to other reasons') | 
+    (outcomes_df['variable'] == 'Total information not known') | 
+    (outcomes_df['variable'] == 'Independent living') | 
     (outcomes_df['variable'] == 'In custody') | 
     (outcomes_df['variable'] == 'Percentage of children who had a missing incident during the year') | 
     (outcomes_df['variable'] == 'Percentage of children who were away from placement without authorisation during the year') | 
@@ -458,6 +463,8 @@ outcomes_df.loc[outcomes_df['variable'] == 'att8', 'variable'] = "Average attain
 outcomes_df.loc[outcomes_df['variable'] == 'Percentage of children who were away from placement without authorisation during the year', 'variable'] = "Away from placement during year"
 outcomes_df.loc[outcomes_df['variable'] == 'Percentage of children who had a missing incident during the year', 'variable'] = "Missing from placement during year"
 outcomes_df.loc[outcomes_df['variable'] == 'one_plus_sus', 'variable'] = "At least one suspension"
+outcomes_df.loc[outcomes_df['variable'] == 'Total information not known', 'variable'] = "Employment or education status not known"
+outcomes_df.loc[outcomes_df['variable'] == 'Not in education training or employment, owing to other reasons', 'variable'] = "Not in education training or employment, for other reasons than illness, pregnancy or parenthood"
 
 outcomes_df.loc[outcomes_df['variable'] == "Away from placement during year", 'percent'] = outcomes_df['number']
 outcomes_df.loc[outcomes_df['variable'] == "Missing from placement during year", 'percent'] = outcomes_df['number']
