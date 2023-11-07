@@ -892,7 +892,7 @@ def render_page_3_content(tab):
                 id='la-dropdown6',
                 options=[{'label': la, 'value': la} for la in outcomes_df['LA_Name'].unique()],
                 multi=True,
-                placeholder='Select LA_Name(s)'
+                placeholder='Select Local Authorities to compare'
            ),
             dcc.Dropdown(
                 id='subcategory-dropdown6',
@@ -903,15 +903,7 @@ def render_page_3_content(tab):
                id='variable-dropdown6',
                placeholder='Select Variable'
            ),
-           dcc.Graph(id='compare_plot'),
-           dcc.Slider(
-               id='year-slider',
-               min=outcomes_df['year'].min(),
-               max=outcomes_df['year'].max(),
-               step=1,
-               value=outcomes_df['year'].min(),
-               marks={str(year): str(year) for year in outcomes_df['year'].unique()}
-           )
+           dcc.Graph(id='compare_plot')
 ])
     else:
         raise PreventUpdate
@@ -1292,23 +1284,46 @@ def update_outcome_plot(selected_county, selected_subcategory, selected_variable
 
 
 
+variable_options3 = []  # No options if no subcategory is selected
+
+@app.callback(Output('variable-dropdown6', 'options'), Input('subcategory-dropdown6', 'value'))
+def update_variable_options(selected_subcategory):
+    if selected_subcategory:
+        # Filter the DataFrame based on the selected subcategory
+        filtered_df = outcomes_df[outcomes_df['subcategory'] == selected_subcategory]
+
+        # Get the unique variable options from the filtered DataFrame
+        variable_options3 = [{'label': variable, 'value': variable} for variable in filtered_df['variable'].unique()]
+    else:
+        variable_options3 = []  # No options if no subcategory is selected
+
+    return variable_options3
+
+
+
 # Add a new callback to update the comparison plot
-@app.callback(Output('comparison-plot', 'figure'),Input('local-authority-dropdown-1', 'value'), Input('variable-dropdown-3', 'value'))
+@app.callback(Output('compare_plot', 'figure'), Input('la-dropdown6', 'value'), Input('variable-dropdown6', 'value'))
 def update_comparison_plot(selected_local_authorities, selected_variable):
-    if len(selected_local_authorities) != 2:
+    if not selected_local_authorities:
         raise PreventUpdate
 
-    filtered_df = la_df[(la_df['variable'] == selected_variable) &
-                       (la_df['LA_Name'].isin(selected_local_authorities))]
+    filtered_df = outcomes_df[(outcomes_df['variable'] == selected_variable) &
+                              (outcomes_df['LA_Name'].isin(selected_local_authorities))]
 
-    fig = px.scatter(filtered_df, x='LA_Name', y='percent', color='LA_Name')
+    fig = px.scatter(filtered_df, x='year', y='percent', color='LA_Name')
     fig.update_layout(
-        xaxis_title='Local Authorities',
+        xaxis_title='Year',
         yaxis_title=selected_variable,
-        title=f'Comparison of {selected_variable} between {selected_local_authorities[0]} and {selected_local_authorities[1]}',
+        title=f'Comparison of {selected_variable} between {", ".join(selected_local_authorities)}',
     )
 
+    # Add a line trace to the plot
+    for la in selected_local_authorities:
+        line_data = filtered_df[filtered_df['LA_Name'] == la].sort_values(by='year')
+        fig.add_trace(go.Scatter(x=line_data['year'], y=line_data['percent'], mode='lines', name=la))
+
     return fig
+
 
 
 
