@@ -1,10 +1,11 @@
-dash==2.9.3
+dash
 numpy
 pandas
 scikit_learn
 chart_studio
 datetime
 plotly
+geopandas
 dash_bootstrap_components
 reverse_geocoder
 gunicorn
