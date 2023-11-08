@@ -1413,7 +1413,7 @@ def update_comparison_plot(selected_local_authorities, selected_dataset, selecte
 
 
 if __name__ == '__main__':
-    app.run_server()
+    app.run_server(debug=False)
 
 
 
