@@ -583,7 +583,7 @@ from dash.exceptions import PreventUpdate
 app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
 
 
-#server = app.server
+server = app.server
 
 tabs_styles = {
     'height': '44px'
@@ -970,14 +970,6 @@ def render_page_4_content(tab):
                     ], style={"display": "inline-block", "vertical-align": "top"})
                 ]),
                 html.Li([
-                    html.Img(src="https://github.com/BenGoodair/Methane_Dashboard/blob/main/ben.jpg?raw=true", style={"width": "100px", "height": "100px"}),
-                    html.Div([
-                        html.H4("Ben"),
-                        html.P("Ben is a social researcher identifying the impacts of privatization on health and social care systems."),
-                        html.P("Ben will embroider any form of data visualisation he thinks worthy of the thread.")
-                    ], style={"display": "inline-block", "vertical-align": "top"})
-                ]),
-                html.Li([
                     html.Img(src="https://github.com/BenGoodair/Outsourcing_Impact_Dashboard/blob/main/Images/Michelle.jpg?raw=true", style={"width": "100px", "height": "100px"}),
                     html.Div([
                         html.H4("Michelle"),
@@ -991,6 +983,14 @@ def render_page_4_content(tab):
                         html.H4("Christine"),
                         html.P("Christine is a political economist who specialises in postgrowth economics and the privatisation of social care."),
                         html.P("Christine once told Emma Watson that her shoelaces were undone.")
+                    ], style={"display": "inline-block", "vertical-align": "top"})
+                ]),
+                html.Li([
+                    html.Img(src="https://github.com/BenGoodair/Methane_Dashboard/blob/main/ben.jpg?raw=true", style={"width": "100px", "height": "100px"}),
+                    html.Div([
+                        html.H4("Ben"),
+                        html.P("Ben is a social researcher identifying the impacts of privatization on health and social care systems."),
+                        html.P("Ben will embroider any form of data visualisation he thinks worthy of the thread.")
                     ], style={"display": "inline-block", "vertical-align": "top"})
                 ]),
                 html.Li([
@@ -1500,274 +1500,6 @@ if __name__ == '__main__':
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# z1, z2, z3 = np.random.random((3, 7, 7))
-
-# customdata = np.dstack((z2, z3))
-# mycustomdata = np.dstack((hospitals["company_name"], hospitals["number_of_employees"]))
-# mycustomdata = mycustomdata.T.tolist()
-
-
-
-# mycustomdata = np.dstack((hospitals["company_name"], hospitals["phone_number"], hospitals["number_of_employees"], hospitals["previous_leaks_n"], hospitals["fossil_fuel_type"], hospitals["number_of_beds"])).T.tolist(),
-
-
-
-
-
-
-
-
-Outcomes = outcomes_df
-Expenditure = la_df[(la_df['category'] == "Expenditure")]
-Placements = placements_df
-
-import dash
-import dash_core_components as dcc
-import dash_html_components as html
-import dash_bootstrap_components as dbc
-import plotly.express as px
-import plotly.graph_objects as go
-from dash.dependencies import Input, Output
-import pandas as pd
-
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
-
-def create_app():
-    layout = html.Div([
-        dcc.Dropdown(
-            id='la-dropdown6',
-            options=[{'label': la, 'value': la} for la in outcomes_df['LA_Name'].unique()],
-            multi=True,
-            placeholder='Select Local Authorities to compare'
-        ),
-        dcc.Dropdown(
-            id='data-dropdown',
-            options=[{'label': la, 'value': la} for la in ['Placements', 'Expenditure', 'Outcomes']],
-            multi=False,
-            placeholder='Select Dataset'
-        ),
-        dcc.Dropdown(
-            id='subcategory-dropdown6',
-            placeholder='Select Subcategory'
-        ),
-        dcc.Dropdown(
-            id='variable-dropdown6',
-            placeholder='Select Variable'
-        ),
-        dcc.Graph(id='compare_plot')
-    ])
-
-    @app.callback(Output('subcategory-dropdown6', 'options'), Input('data-dropdown', 'value'))
-    def update_subcategory_options(selected_dataset):
-        if selected_dataset:
-            # Filter the DataFrame based on the selected dataset
-            if selected_dataset == 'Outcomes':
-                filtered_df = Outcomes
-            elif selected_dataset == 'Expenditure':
-                filtered_df = Expenditure
-            elif selected_dataset == 'Placements':
-                filtered_df = Placements
-            else:
-                filtered_df = outcomes_df  # Default to Outcomes DataFrame if dataset is not selected
-
-            # Get the unique subcategory options from the filtered DataFrame
-            subcategory_options = [{'label': subcategory, 'value': subcategory} for subcategory in filtered_df['subcategory'].unique()]
-        else:
-            subcategory_options = []  # No options if no dataset is selected
-
-        return subcategory_options
-
-    @app.callback(Output('variable-dropdown6', 'options'), Input('subcategory-dropdown6', 'value'))
-    def update_variable_options(selected_subcategory):
-        if selected_subcategory:
-            # Filter the DataFrame based on the selected subcategory
-            if selected_subcategory in Outcomes['subcategory'].unique():
-                filtered_df = Outcomes[Outcomes['subcategory'] == selected_subcategory]
-            elif selected_subcategory in Expenditure['subcategory'].unique():
-                filtered_df = Expenditure[Expenditure['subcategory'] == selected_subcategory]
-            elif selected_subcategory in Placements['subcategory'].unique():
-                filtered_df = Placements[Placements['subcategory'] == selected_subcategory]
-            else:
-                return []
-
-            # Get the unique variable options from the filtered DataFrame
-            variable_options = [{'label': variable, 'value': variable} for variable in filtered_df['variable'].unique()]
-        else:
-            variable_options = []  # No options if no subcategory is selected
-
-        return variable_options
-
-    @app.callback(Output('compare_plot', 'figure'), [Input('la-dropdown6', 'value'), Input('data-dropdown', 'value'), Input('variable-dropdown6', 'value')])
-    def update_comparison_plot(selected_local_authorities, selected_dataset, selected_variable):
-        if not selected_local_authorities or not selected_dataset or not selected_variable:
-            return {
-                'data': []
-            }
-
-        # Select the appropriate DataFrame based on the selected dataset and variable
-        if selected_dataset == 'Outcomes':
-            filtered_df = Outcomes[(Outcomes['variable'] == selected_variable) &
-                                  (Outcomes['LA_Name'].isin(selected_local_authorities))]
-        elif selected_dataset == 'Expenditure':
-            filtered_df = Expenditure[(Expenditure['variable'] == selected_variable) &
-                                      (Expenditure['LA_Name'].isin(selected_local_authorities))]
-        elif selected_dataset == 'Placements':
-            filtered_df = Placements[(Placements['variable'] == selected_variable) &
-                                     (Placements['LA_Name'].isin(selected_local_authorities))]
-        else:
-            return {
-                'data': []
-            }
-
-        fig = px.scatter(filtered_df, x='year', y='percent', color='LA_Name')
-        fig.update_layout(
-            xaxis_title='Year',
-            yaxis_title=selected_variable,
-            title=f'Comparison of {selected_variable} between {", ".join(selected_local_authorities)}',
-        )
-
-        # Add a line trace to the plot
-        for la in selected_local_authorities:
-            line_data = filtered_df[filtered_df['LA_Name'] == la].sort_values(by='year')
-            fig.add_trace(go.Scatter(x=line_data['year'], y=line_data['percent'], mode='lines', name=la))
-
-        return fig
-
-    return layout
-
-if __name__ == '__main__':
-    app.layout = create_app()
-    app.run_server(host='localhost', port=8005)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
-#
-#
-##app = dash.Dash(__name__)
-#
-#app.layout = html.Div([
-#    html.H1("Number of active children's homes"),
-#    dcc.Graph(id='scatter-plot'),
-#    dcc.Dropdown(
-#        id='LA-dropdown',
-#        options=[
-#            {'label': hop, 'value': hop} for hop in la_df['LA_Name'].unique()
-#        ],
-#        value=None
-#    )
-#])
-#
-#@app.callback(
-#        Output('scatter-plot', 'figure'),
-#        Input('LA-dropdown', 'value'))
-#def update_scatter_plot(selected_county):
-##    filtered_df = la_df[la_df['variable']=="Private provision"][la_df['LA_Name'] == selected_county]
-#
-#    if selected_county is None:
-#        filtered_df = la_df[la_df['variable']=="Private provision"][['LA_Name','year' ,'percent']]
-#    else:
-#        filtered_df = la_df[la_df['variable']=="Private provision"][la_df['LA_Name'] == selected_county]
-#
-#    fig1 = px.scatter(filtered_df, x='year', y='percent', color='percent', trendline='lowess',
-#                     color_continuous_scale='ylorrd')
-#    fig1.update_traces(marker=dict(size=5))
-#    fig1.update_layout(xaxis_title='Year',        yaxis_title='For-profit placements (%)',        title='Percent of children placed with for-profit providers 2011-22',        coloraxis_colorbar=dict(title='For-profit %')    )
-#    
-#    return fig1
-#
-#if __name__ == '__main__':
-#    app.run_server(host='localhost',port=8005)
-#
-#
-#
-
-
-
-
-
-
-
-
-#
-#@app.callback(Output('outcome_plot', 'figure'), Input('LA-dropdown4', 'value'), Input('subcategory-dropdown4', 'value'), Input('variable-dropdown4', 'value'))
-#def update_scatter_plot(selected_county, selected_subcategory, selected_variable):
-#    if selected_county is None or selected_county == "":
-#
-#
-#
-#
-#filtered_df_outcome = outcomes_df[(outcomes_df['subcategory'] == 'Health and criminalisation') & (outcomes_df['variable'] == 'SDQ score is a cause for concern')]
-#    else:
-#        filtered_df_outcome = outcomes_df[(outcomes_df['subcategory'] == selected_subcategory) & 
-#                                  (outcomes_df['LA_Name'] == selected_county) & 
-#                                  (outcomes_df['variable'] == selected_variable)]
-#    
-#outcome_plot = px.scatter(filtered_df_outcome, x='year', y='percent', color='percent', trendline='lowess',color_continuous_scale='ylorrd')
-#    outcome_plot.update_traces(marker=dict(size=5))
-#    outcome_plot.update_layout(
-#        xaxis_title='Year',
-#        yaxis_title='For-profit expenditure (%)',
-#        title='Outcomes for children in care',
-#        coloraxis_colorbar=dict(title=selected_variable)
-#    )
-#    
-#    return outcome_plot
-#
 
 
 

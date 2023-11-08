@@ -970,14 +970,6 @@ def render_page_4_content(tab):
                     ], style={"display": "inline-block", "vertical-align": "top"})
                 ]),
                 html.Li([
-                    html.Img(src="https://github.com/BenGoodair/Methane_Dashboard/blob/main/ben.jpg?raw=true", style={"width": "100px", "height": "100px"}),
-                    html.Div([
-                        html.H4("Ben"),
-                        html.P("Ben is a social researcher identifying the impacts of privatization on health and social care systems."),
-                        html.P("Ben will embroider any form of data visualisation he thinks worthy of the thread.")
-                    ], style={"display": "inline-block", "vertical-align": "top"})
-                ]),
-                html.Li([
                     html.Img(src="https://github.com/BenGoodair/Outsourcing_Impact_Dashboard/blob/main/Images/Michelle.jpg?raw=true", style={"width": "100px", "height": "100px"}),
                     html.Div([
                         html.H4("Michelle"),
@@ -991,6 +983,14 @@ def render_page_4_content(tab):
                         html.H4("Christine"),
                         html.P("Christine is a political economist who specialises in postgrowth economics and the privatisation of social care."),
                         html.P("Christine once told Emma Watson that her shoelaces were undone.")
+                    ], style={"display": "inline-block", "vertical-align": "top"})
+                ]),
+                html.Li([
+                    html.Img(src="https://github.com/BenGoodair/Methane_Dashboard/blob/main/ben.jpg?raw=true", style={"width": "100px", "height": "100px"}),
+                    html.Div([
+                        html.H4("Ben"),
+                        html.P("Ben is a social researcher identifying the impacts of privatization on health and social care systems."),
+                        html.P("Ben will embroider any form of data visualisation he thinks worthy of the thread.")
                     ], style={"display": "inline-block", "vertical-align": "top"})
                 ]),
                 html.Li([
