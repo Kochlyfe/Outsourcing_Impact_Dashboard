@@ -489,7 +489,7 @@ outcomes_df['percent'] = pd.to_numeric(outcomes_df['percent'], errors='coerce')
 placements_df = la_df[
     (la_df['subcategory'] == 'Distance between home and placement and locality of placement') |
     (la_df['subcategory'] == 'Reason for placement change during the year') |
-    #(la_df['subcategory'] == 'Placement') |
+    (la_df['subcategory'] == 'Place providers') |
     (la_df['subcategory'] == 'Locality of placement') |
     (la_df['subcategory'] == 'LA of placement') |
     (la_df['subcategory'] == 'Distance between home and placement') |
@@ -530,8 +530,8 @@ variable_options2 = []  # No options if no subcategory is selected
 
 
 Outcomes = outcomes_df
-Expenditure = la_df[(la_df['category']=="Expenditure") & (la_df['subcategory']=="For_profit")]
-Placements = la_df[la_df['variable']=="Private provision"]
+Expenditure = la_df[(la_df['category']=="Expenditure") ]
+Placements = placements_df
 
 
 
@@ -978,7 +978,7 @@ def render_page_4_content(tab):
                     ], style={"display": "inline-block", "vertical-align": "top"})
                 ]),
                 html.Li([
-                    html.Img(src="https://github.com/BenGoodair/Outsourcing_Impact_Dashboard/blob/main/Images/michelle.jpg?raw=true", style={"width": "100px", "height": "100px"}),
+                    html.Img(src="https://github.com/BenGoodair/Outsourcing_Impact_Dashboard/blob/main/Images/Michelle.jpg?raw=true", style={"width": "100px", "height": "100px"}),
                     html.Div([
                         html.H4("Michelle"),
                         html.P("Michelle is a Research Assistant Professor with the U-M Institute for Firearm Injury Prevention."),
@@ -1331,35 +1331,69 @@ def update_outcome_plot(selected_county, selected_subcategory, selected_variable
 
 
 
-variable_options3 = []  # No options if no subcategory is selected
 
-@app.callback(Output('variable-dropdown6', 'options'), Input('data-dropdown', 'value'), Input('subcategory-dropdown6', 'value'))
-def update_variable_options(selected_dataset, selected_subcategory):
-    filtered_df = selected_dataset
+variable_options4 = []  # No options if no subcategory is selected
 
+@app.callback(Output('subcategory-dropdown6', 'options'), Input('data-dropdown', 'value'))
+def update_subcategory_options(selected_dataset):
+    if selected_dataset:
+        # Filter the DataFrame based on the selected dataset
+        if selected_dataset == 'Outcomes':
+            filtered_df = Outcomes
+        elif selected_dataset == 'Expenditure':
+            filtered_df = Expenditure
+        elif selected_dataset == 'Placements':
+            filtered_df = Placements
+        else:
+            filtered_df = outcomes_df  # Default to Outcomes DataFrame if dataset is not selected
+
+            # Get the unique subcategory options from the filtered DataFrame
+        subcategory_options = [{'label': subcategory, 'value': subcategory} for subcategory in filtered_df['subcategory'].unique()]
+    else:
+         subcategory_options = []  # No options if no dataset is selected
+
+    return subcategory_options
+
+@app.callback(Output('variable-dropdown6', 'options'), Input('subcategory-dropdown6', 'value'))
+def update_variable_options(selected_subcategory):
     if selected_subcategory:
         # Filter the DataFrame based on the selected subcategory
-        filtered_df = filtered_df[filtered_df['subcategory'] == selected_subcategory]
+        if selected_subcategory in Outcomes['subcategory'].unique():
+            filtered_df = Outcomes[Outcomes['subcategory'] == selected_subcategory]
+        elif selected_subcategory in Expenditure['subcategory'].unique():
+            filtered_df = Expenditure[Expenditure['subcategory'] == selected_subcategory]
+        elif selected_subcategory in Placements['subcategory'].unique():
+            filtered_df = Placements[Placements['subcategory'] == selected_subcategory]
+        else:
+            return []
 
-        # Get the unique variable options from the filtered DataFrame
-        variable_options3 = [{'label': variable, 'value': variable} for variable in filtered_df['variable'].unique()]
+            # Get the unique variable options from the filtered DataFrame
+        variable_options = [{'label': variable, 'value': variable} for variable in filtered_df['variable'].unique()]
     else:
-        variable_options3 = []  # No options if no subcategory is selected
+        variable_options = []  # No options if no subcategory is selected
+    return variable_options
 
-    return variable_options3
-
-
-
-# Add a new callback to update the comparison plot
-@app.callback(Output('compare_plot', 'figure'),   Input('la-dropdown6', 'value'), Input('data-dropdown', 'value'),Input('variable-dropdown6', 'value'))
+@app.callback(Output('compare_plot', 'figure'), [Input('la-dropdown6', 'value'), Input('data-dropdown', 'value'), Input('variable-dropdown6', 'value')])
 def update_comparison_plot(selected_local_authorities, selected_dataset, selected_variable):
-    filtered_df = selected_dataset
-    
-    if not selected_local_authorities:
-        raise PreventUpdate
-    
-    filtered_df = filtered_df[(filtered_df['variable'] == selected_variable) &
-                              (filtered_df['LA_Name'].isin(selected_local_authorities))]
+    if not selected_local_authorities or not selected_dataset or not selected_variable:
+        return {
+            'data': []
+        }
+
+    # Select the appropriate DataFrame based on the selected dataset and variable
+    if selected_dataset == 'Outcomes':
+        filtered_df = Outcomes[(Outcomes['variable'] == selected_variable) &
+                              (Outcomes['LA_Name'].isin(selected_local_authorities))]
+    elif selected_dataset == 'Expenditure':
+        filtered_df = Expenditure[(Expenditure['variable'] == selected_variable) &
+                                  (Expenditure['LA_Name'].isin(selected_local_authorities))]
+    elif selected_dataset == 'Placements':
+        filtered_df = Placements[(Placements['variable'] == selected_variable) &
+                                 (Placements['LA_Name'].isin(selected_local_authorities))]
+    else:
+        return {
+            'data': []
+        }
 
     fig = px.scatter(filtered_df, x='year', y='percent', color='LA_Name')
     fig.update_layout(
@@ -1368,7 +1402,7 @@ def update_comparison_plot(selected_local_authorities, selected_dataset, selecte
         title=f'Comparison of {selected_variable} between {", ".join(selected_local_authorities)}',
     )
 
-    # Add a line trace to the plot
+        # Add a line trace to the plot
     for la in selected_local_authorities:
         line_data = filtered_df[filtered_df['LA_Name'] == la].sort_values(by='year')
         fig.add_trace(go.Scatter(x=line_data['year'], y=line_data['percent'], mode='lines', name=la))
@@ -1380,6 +1414,108 @@ def update_comparison_plot(selected_local_authorities, selected_dataset, selecte
 
 if __name__ == '__main__':
     app.run_server(host='localhost',port=8005)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1403,78 +1539,127 @@ if __name__ == '__main__':
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Outcomes = outcomes_df
+Expenditure = la_df[(la_df['category'] == "Expenditure")]
+Placements = placements_df
+
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import dash_bootstrap_components as dbc
+import plotly.express as px
+import plotly.graph_objects as go
+from dash.dependencies import Input, Output
+import pandas as pd
+
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
+
+def create_app():
+    layout = html.Div([
+        dcc.Dropdown(
+            id='la-dropdown6',
+            options=[{'label': la, 'value': la} for la in outcomes_df['LA_Name'].unique()],
+            multi=True,
+            placeholder='Select Local Authorities to compare'
+        ),
+        dcc.Dropdown(
+            id='data-dropdown',
+            options=[{'label': la, 'value': la} for la in ['Placements', 'Expenditure', 'Outcomes']],
+            multi=False,
+            placeholder='Select Dataset'
+        ),
+        dcc.Dropdown(
+            id='subcategory-dropdown6',
+            placeholder='Select Subcategory'
+        ),
+        dcc.Dropdown(
+            id='variable-dropdown6',
+            placeholder='Select Variable'
+        ),
+        dcc.Graph(id='compare_plot')
+    ])
+
+    @app.callback(Output('subcategory-dropdown6', 'options'), Input('data-dropdown', 'value'))
+    def update_subcategory_options(selected_dataset):
+        if selected_dataset:
+            # Filter the DataFrame based on the selected dataset
+            if selected_dataset == 'Outcomes':
+                filtered_df = Outcomes
+            elif selected_dataset == 'Expenditure':
+                filtered_df = Expenditure
+            elif selected_dataset == 'Placements':
+                filtered_df = Placements
+            else:
+                filtered_df = outcomes_df  # Default to Outcomes DataFrame if dataset is not selected
+
+            # Get the unique subcategory options from the filtered DataFrame
+            subcategory_options = [{'label': subcategory, 'value': subcategory} for subcategory in filtered_df['subcategory'].unique()]
+        else:
+            subcategory_options = []  # No options if no dataset is selected
+
+        return subcategory_options
+
+    @app.callback(Output('variable-dropdown6', 'options'), Input('subcategory-dropdown6', 'value'))
+    def update_variable_options(selected_subcategory):
+        if selected_subcategory:
+            # Filter the DataFrame based on the selected subcategory
+            if selected_subcategory in Outcomes['subcategory'].unique():
+                filtered_df = Outcomes[Outcomes['subcategory'] == selected_subcategory]
+            elif selected_subcategory in Expenditure['subcategory'].unique():
+                filtered_df = Expenditure[Expenditure['subcategory'] == selected_subcategory]
+            elif selected_subcategory in Placements['subcategory'].unique():
+                filtered_df = Placements[Placements['subcategory'] == selected_subcategory]
+            else:
+                return []
+
+            # Get the unique variable options from the filtered DataFrame
+            variable_options = [{'label': variable, 'value': variable} for variable in filtered_df['variable'].unique()]
+        else:
+            variable_options = []  # No options if no subcategory is selected
+
+        return variable_options
+
+    @app.callback(Output('compare_plot', 'figure'), [Input('la-dropdown6', 'value'), Input('data-dropdown', 'value'), Input('variable-dropdown6', 'value')])
+    def update_comparison_plot(selected_local_authorities, selected_dataset, selected_variable):
+        if not selected_local_authorities or not selected_dataset or not selected_variable:
+            return {
+                'data': []
+            }
+
+        # Select the appropriate DataFrame based on the selected dataset and variable
+        if selected_dataset == 'Outcomes':
+            filtered_df = Outcomes[(Outcomes['variable'] == selected_variable) &
+                                  (Outcomes['LA_Name'].isin(selected_local_authorities))]
+        elif selected_dataset == 'Expenditure':
+            filtered_df = Expenditure[(Expenditure['variable'] == selected_variable) &
+                                      (Expenditure['LA_Name'].isin(selected_local_authorities))]
+        elif selected_dataset == 'Placements':
+            filtered_df = Placements[(Placements['variable'] == selected_variable) &
+                                     (Placements['LA_Name'].isin(selected_local_authorities))]
+        else:
+            return {
+                'data': []
+            }
+
+        fig = px.scatter(filtered_df, x='year', y='percent', color='LA_Name')
+        fig.update_layout(
+            xaxis_title='Year',
+            yaxis_title=selected_variable,
+            title=f'Comparison of {selected_variable} between {", ".join(selected_local_authorities)}',
+        )
+
+        # Add a line trace to the plot
+        for la in selected_local_authorities:
+            line_data = filtered_df[filtered_df['LA_Name'] == la].sort_values(by='year')
+            fig.add_trace(go.Scatter(x=line_data['year'], y=line_data['percent'], mode='lines', name=la))
+
+        return fig
+
+    return layout
+
+if __name__ == '__main__':
+    app.layout = create_app()
+    app.run_server(host='localhost', port=8005)
 
 
 
