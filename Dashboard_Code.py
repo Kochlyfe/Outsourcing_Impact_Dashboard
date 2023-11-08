@@ -674,7 +674,7 @@ def render_page_content(pathname):
                 [
                     dbc.NavLink("Outsourcing levels", href="/page-1", active="exact"),
                     dbc.NavLink("Quality Impacts", href="/page-2", active="exact"),
-                    dbc.NavLink("Local authority profiles", href="/page-3", active="exact"),
+                    dbc.NavLink("Comparison tools", href="/page-3", active="exact"),
                     dbc.NavLink("Further Resources", href="/page-4", active="exact"),
                 ],
                 vertical=True,
@@ -706,16 +706,17 @@ def render_page_content(pathname):
     elif pathname == "/page-3":
         return html.Div([
             dcc.Tabs(id="page-3-tabs", value='tab-8', children=[
-                dcc.Tab(label='Local authority profiles', value='tab-8', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Local authority comparison', value='tab-8', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Provider comparison', value='tab-9', style=tab_style, selected_style=tab_selected_style),
                 ], style=tabs_styles),
             html.Div(id='page-3-tabs-content')
         ])
     elif pathname == "/page-4":
         return html.Div([
-            dcc.Tabs(id="page-4-tabs", value='tab-9', children=[
-                dcc.Tab(label='Data download', value='tab-9', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Educational resources', value='tab-10', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Contact and feedback', value='tab-11', style=tab_style, selected_style=tab_selected_style),
+            dcc.Tabs(id="page-4-tabs", value='tab-10', children=[
+                dcc.Tab(label='Data download', value='tab-10', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Educational resources', value='tab-11', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Contact and feedback', value='tab-12', style=tab_style, selected_style=tab_selected_style),
             ], style=tabs_styles),
             html.Div(id='page-4-tabs-content')
         ])
@@ -913,14 +914,21 @@ def render_page_3_content(tab):
 
 @app.callback(Output('page-4-tabs-content', 'children'), [Input('page-4-tabs', 'value')])
 def render_page_4_content(tab):
-    if tab == 'tab-9':
+    if tab == 'tab-10':
         return  html.Div([
-            html.H3('Data Downloads:'),
-            html.P('You can access to three different files: Data at the lat/lon scale, county scale or state scale:'),
+            html.H1('Data Downloads:'),
+            html.H3('Our cleaned data is available here:'),
             html.Ul([
-                html.Li(html.A("Download Data with for LAs", href="https://raw.githubusercontent.com/BenGoodair/Outsourcing_Impact_Dashboard/main/Data/dashboard_LA_data_long.csv"))])  
+                html.Li(html.A("All data for LAs (large file warning)", href="https://raw.githubusercontent.com/BenGoodair/childrens_social_care_data/main/Final_Data/outputs/dashboard_data.csv")),
+                html.Li(html.A("All data for providers", href="https://raw.githubusercontent.com/BenGoodair/childrens_social_care_data/main/Final_Data/outputs/Provider_data.csv")),
+                html.Li(html.A("Full coding library for how data was produced", href="https://github.com/BenGoodair/childrens_social_care_data/tree/main"))]),
+            html.H3('Original data is available at these locations:'), 
+            html.Ul([
+                html.Li(html.A("Outcomes for children in care", href="https://www.gov.uk/government/statistics/outcomes-for-children-in-need-including-children-looked-after-by-local-authorities-in-england-2021-to-2022")),
+                html.Li(html.A("Placements for children in care", href="https://www.gov.uk/government/statistics/children-looked-after-in-england-including-adoption-2021-to-2022")),
+                html.Li(html.A("Expenditure on children in care", href="https://explore-education-statistics.service.gov.uk/find-statistics/la-and-school-expenditure/2021-22"))]),
          ])
-    elif tab == 'tab-10':
+    elif tab == 'tab-11':
         return html.Div([
             html.H3("Links to Resources"),
 
@@ -934,7 +942,7 @@ def render_page_4_content(tab):
             html.H6("Research on outsourcing of healthcare"),
             html.H6("Research from outside the UK")
         ])
-    elif tab == 'tab-11':
+    elif tab == 'tab-12':
         return html.Div([
             html.H3("Meet the team:"),
             html.Ul([
