@@ -570,7 +570,6 @@ Placements = placements_df
 
 ####Dashboard####
 #app = Dash(__name__)
-import json
 import dash 
 from dash import dash_table
 from dash import State
@@ -1412,59 +1411,7 @@ def update_comparison_plot(selected_local_authorities, selected_dataset, selecte
 
 
 
-if __name__ == '__main__':
-    app.run_server(debug=False)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+app.run_server(debug=False)
 
 
 
