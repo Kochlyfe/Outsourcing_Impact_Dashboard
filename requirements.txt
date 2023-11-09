@@ -9,3 +9,4 @@ geopandas
 dash_bootstrap_components
 reverse_geocoder
 gunicorn
+statsmodels
