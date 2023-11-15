@@ -1215,7 +1215,8 @@ def update_scatter_plot(selected_domain):
         y_label = group_data['Jittered_y'].max() + 0.12  # Adjust the vertical position as needed
 
         # Get the mode (most common category) for the 'Overall_Experiences_Mapping' in the group
-        rating = group_data['Overall_Experiences_Mapping'].mode().iloc[0]
+        rating = group_data['Overall_Experiences_Mapping'].value_counts().idxmax()
+
 
         # Add a text annotation to the figure
         ofsted_fig.add_annotation(
