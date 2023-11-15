@@ -1206,6 +1206,9 @@ def update_scatter_plot(selected_domain):
         plot_bgcolor='rgba(0,0,0,0)'  # Set the background color to transparent
     )
 
+    print(filtered_active_chomes['Circle'].unique())
+
+
     for group, group_data in filtered_active_chomes.groupby('Circle'):
         # Calculate the position for the label above the group
         x_label = group_data['Jittered_x'].mean()
