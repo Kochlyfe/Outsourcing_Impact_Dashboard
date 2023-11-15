@@ -1380,8 +1380,8 @@ def update_variable_options(selected_subcategory):
         variable_options = []  # No options if no subcategory is selected
     return variable_options
 
-@app.callback(Output('compare_plot', 'figure'), [Input('la-dropdown6', 'value'), Input('data-dropdown', 'value'), Input('variable-dropdown6', 'value')])
-def update_comparison_plot(selected_local_authorities, selected_dataset, selected_variable):
+@app.callback(Output('compare_plot', 'figure'), [Input('la-dropdown6', 'value'), Input('data-dropdown', 'value'), Input('subcategory-dropdown6', 'value'), Input('variable-dropdown6', 'value')])
+def update_comparison_plot(selected_local_authorities, selected_dataset, selected_subcategory, selected_variable):
     if not selected_local_authorities or not selected_dataset or not selected_variable:
         return {
             'data': []
@@ -1393,6 +1393,7 @@ def update_comparison_plot(selected_local_authorities, selected_dataset, selecte
                               (Outcomes['LA_Name'].isin(selected_local_authorities))]
     elif selected_dataset == 'Expenditure':
         filtered_df = Expenditure[(Expenditure['variable'] == selected_variable) &
+                                  (Expenditure['subcategory'] == selected_subcategory)&
                                   (Expenditure['LA_Name'].isin(selected_local_authorities))]
     elif selected_dataset == 'Placements':
         filtered_df = Placements[(Placements['variable'] == selected_variable) &
