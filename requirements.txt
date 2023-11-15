@@ -1,6 +1,6 @@
 dash==2.13.0
 numpy
-pandas==2.0.3
+pandas
 scikit_learn
 chart_studio
 datetime
