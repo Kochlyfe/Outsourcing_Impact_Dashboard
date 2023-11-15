@@ -555,6 +555,7 @@ Placements = placements_df
 
 
 
+np.random.seed(42)  # or any other seed value
 
 
 
