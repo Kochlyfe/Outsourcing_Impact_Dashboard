@@ -1144,13 +1144,14 @@ def update_plot(selected_variable):
 
 @app.callback(Output('ofsted-plot', 'figure'), Input('domain-dropdown', 'value'))
 def update_scatter_plot(selected_domain):
-    filtered_active_chomes = active_chomes[active_chomes['Domain'] == selected_domain]
+
+    filtered_active_chomes =  active_chomes[active_chomes['Domain']==selected_domain]
 
     # Create a unique circle identifier for each 'Overall.experiences'
     filtered_active_chomes['Circle'] = filtered_active_chomes.groupby('Rating').ngroup()
 
     # Define the custom order for 'Overall.experiences'
-    custom_order = ['Inadequate', 'Requires improvement to be good', 'Good', 'Outstanding']
+    custom_order = [  'Inadequate','Requires improvement to be good', 'Good', 'Outstanding']
 
     # Create a Categorical data type with the desired order
     filtered_active_chomes['Overall_Experiences_Mapping'] = pd.Categorical(filtered_active_chomes['Rating'], categories=custom_order, ordered=True)
@@ -1170,18 +1171,17 @@ def update_scatter_plot(selected_domain):
         group['Jittered_y'] = group['Overall_Experiences_Mapping'].cat.codes + r * np.sin(theta)
         return group
 
-    # Apply the point addition function using a loop instead of groupby and apply
-    for circle_id in filtered_active_chomes['Circle'].unique():
-        circle_group = filtered_active_chomes[filtered_active_chomes['Circle'] == circle_id]
-        filtered_active_chomes.loc[filtered_active_chomes['Circle'] == circle_id] = add_points_in_circle(circle_group)
+    # Apply the point addition function to each group
+    filtered_active_chomes = filtered_active_chomes.groupby('Circle').apply(add_points_in_circle).reset_index(drop=True)
 
     # Create a bubble chart with perfectly filled huge bubbles filled with jittered points in both dimensions
     ofsted_fig = px.scatter(filtered_active_chomes, x='Jittered_x', y='Jittered_y',
-                             color='Sector',
-                             hover_name='Organisation.which.owns.the.provider',
-                             custom_data=['Rating', 'Places', 'Registration.date', 'Local.authority', 'Sector'],
-                             labels={'Sector': 'Sector'},
-                             title="Active Children's Homes - as of March 2023")
+                 color='Sector',
+                 hover_name = 'Organisation.which.owns.the.provider',
+                 custom_data=['Rating', 'Places', 'Registration.date', 'Local.authority', 'Sector'],
+                 labels={'Sector': 'Sector'},
+                 title="Active Children's Homes - as of March 2023")
+
 
     hover_template = """
     Owner: %{hovertext}<br>
@@ -1194,6 +1194,7 @@ def update_scatter_plot(selected_domain):
 
     ofsted_fig.update_traces(hovertemplate=hover_template)
 
+
     # Update the size and opacity of the bubbles
     marker_size = 6
     ofsted_fig.update_traces(marker=dict(size=marker_size, opacity=0.7))
@@ -1204,6 +1205,9 @@ def update_scatter_plot(selected_domain):
     ofsted_fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)'  # Set the background color to transparent
     )
+
+    print(filtered_active_chomes['Circle'].unique())
+
 
     for group, group_data in filtered_active_chomes.groupby('Circle'):
         # Calculate the position for the label above the group
@@ -1222,6 +1226,7 @@ def update_scatter_plot(selected_domain):
             font=dict(size=16),
             opacity=0.9
         )
+
 
     return ofsted_fig
 
