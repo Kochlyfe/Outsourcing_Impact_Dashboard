@@ -1,5 +1,5 @@
 dash==2.13.0
-numpy==1.25.2
+numpy
 pandas==2.0.3
 scikit_learn
 chart_studio
