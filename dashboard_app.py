@@ -426,6 +426,7 @@ outcomes_df = outcomes_df[
     (outcomes_df['variable'] != 'Total') &
     (outcomes_df['variable'] != 'Total ages 0 to 4 years') &
     (outcomes_df['variable'] != 'Total all ages') &
+    (outcomes_df['variable'] != 'Total ages 10 to 17 years') &
     (outcomes_df['variable'] != 'Total ages 5 to 16 years')
 ]
 
@@ -531,6 +532,8 @@ variable_options2 = []  # No options if no subcategory is selected
 
 Outcomes = outcomes_df
 Expenditure = la_df[(la_df['category']=="Expenditure") ]
+Expenditure.rename(columns={"subcategory": "newsubcatname", "variable": "newvarmame"})
+Expenditure.rename(columns={"newsubcatname": "variable", "newvarmame": "subcategory"})
 Placements = placements_df
 
 

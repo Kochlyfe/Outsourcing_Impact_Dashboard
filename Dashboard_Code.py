@@ -531,6 +531,8 @@ variable_options2 = []  # No options if no subcategory is selected
 
 Outcomes = outcomes_df
 Expenditure = la_df[(la_df['category']=="Expenditure") ]
+Expenditure.rename(columns={"subcategory": "newsubcatname", "variable": "newvarmame"})
+Expenditure.rename(columns={"newsubcatname": "variable", "newvarmame": "subcategory"})
 Placements = placements_df
 
 
@@ -1541,6 +1543,9 @@ if __name__ == '__main__':
 
 Outcomes = outcomes_df
 Expenditure = la_df[(la_df['category'] == "Expenditure")]
+Expenditure.rename(columns={"subcategory": "newsubcatname", "variable": "newvarmame"})
+Expenditure.rename(columns={"newsubcatname": "variable", "newvarmame": "subcategory"})
+
 Placements = placements_df
 
 import dash
