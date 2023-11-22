@@ -1079,7 +1079,7 @@ def render_page_4_content(tab):
             html.H3("Project Information"),
             html.Ul([
                 html.Li(html.A("We are incredibly grateful for the support of Nuffield Foundation for funding this project, you can view our project homepage here:", href="https://www.nuffieldfoundation.org/project/evidencing-the-outsourcing-of-social-care-provision-in-england")),
-                html.Li(html.A("The project has been funded by the Nuffield Foundation, but the view expressed are those of the authors and not necessarily the Foundation. Visit: www.nuffieldfoundation.org", href="www.nuffieldfoundation.org"))
+                html.Li(html.A("The project has been funded by the Nuffield Foundation, but the view expressed are those of the authors and not necessarily the Foundation. Visit: www.nuffieldfoundation.org", href="https://www.nuffieldfoundation.org"))
             ])        ])
     elif tab == 'tab-12':
         return html.Div([
