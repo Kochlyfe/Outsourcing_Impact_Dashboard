@@ -144,6 +144,85 @@ merged2.loc[(merged2['variable'] == 'Total Children Looked After') & (merged2['s
 exitdata = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/childrens_social_care_data/main/Final_Data/outputs/enter_exit.csv", encoding='ISO-8859-1')
 
 
+exitdata['Date'] = pd.to_datetime(exitdata['Date'], format="%d/%m/%Y")
+exitdata['year'] = exitdata['Date'].dt.strftime('%Y')
+exitdata['Sector'] = exitdata['Sector'].replace({"Private": "For-profit", "Local Authority": "Local Authority","Health Authority": "Local Authority", "Voluntary": "Third Sector"})
+exitdata['leave_join'] = exitdata['leave_join'].replace({"Leave": "Exits", "Join": "Entries"})
+
+
+exitdata['Places'] = pd.to_numeric(exitdata['Places'], errors='coerce')
+exitdata['childrens_homes'] = 1
+
+exitdata = exitdata.groupby(['Sector', 'year', 'leave_join', 'Local.authority']).agg(
+    childrens_homes=('childrens_homes', 'sum'),
+    Places=('Places', 'sum')
+).reset_index()
+
+all = exitdata.groupby(['Sector', 'year', 'leave_join']).agg(
+    childrens_homes=('childrens_homes', 'sum'),
+    Places=('Places', 'sum')
+).reset_index()
+
+all['Local.authority']="All"
+
+exitdata = pd.concat([exitdata, all])
+
+
+exitdata = pd.melt(exitdata, id_vars=['Sector', 'Local.authority', 'year', 'leave_join'], value_vars=['childrens_homes', 'Places'],
+                    var_name='Homes_or_places', value_name='value')
+
+exitdata['Homes_or_places'] = exitdata['Homes_or_places'].replace({"childrens_homes": "Children's homes"})
+
+
+#exitdata.columns.tolist()
+
+
+exitdata = exitdata[(exitdata['year'] != '2007')&
+                    (exitdata['year'] != '2008')]
+
+
+
+
+
+# Convert 'value' column to numeric if needed
+exitdata['value'] = pd.to_numeric(exitdata['value'], errors='coerce')
+
+# Grouping by specified columns and calculating net change
+grouped = exitdata.groupby(['year', 'Local.authority', 'Homes_or_places', 'Sector']).apply(
+    lambda x: x.loc[x['leave_join'] == 'Entries', 'value'].sum() - x.loc[x['leave_join'] == 'Exits', 'value'].sum()
+).reset_index(name='value')
+
+grouped['leave_join']="Net change"
+
+grouped = grouped[(grouped['year']!="2015")&
+                  (grouped['year']!="2016")&
+                  (grouped['year']!="2014")]
+
+# Creating a new DataFrame with the 'Net change' values
+exitdata = pd.concat([exitdata, grouped])
+
+
+
+
+
+
+exitdata = exitdata.sort_values(by='year')
+exitdata = exitdata.sort_values(by='Local.authority')
+
+
+
+exitdata['year'] = pd.Categorical(exitdata['year'], categories=['2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023'])
+
+
+
+
+
+
+
+
+
+
+
 
 ##### provider bars #####
 
@@ -642,7 +721,7 @@ sidebar = html.Div(
                 dbc.NavLink("Home", href="/", active="exact"),
                 dbc.NavLink("Outsourcing levels", href="/page-1", active="exact"),
                 dbc.NavLink("Quality Impacts", href="/page-2", active="exact"),
-                dbc.NavLink("Comparison tools", href="/page-3", active="exact"),
+                dbc.NavLink("Comparison tool", href="/page-3", active="exact"),
                 dbc.NavLink("Links To Resources", href="/page-4", active="exact"),
             ],
             vertical=True,
@@ -685,7 +764,7 @@ def render_page_content(pathname):
                 [
                     dbc.NavLink("Outsourcing levels", href="/page-1", active="exact"),
                     dbc.NavLink("Quality Impacts", href="/page-2", active="exact"),
-                    dbc.NavLink("Comparison tools", href="/page-3", active="exact"),
+                    dbc.NavLink("Comparison tool", href="/page-3", active="exact"),
                     dbc.NavLink("Further Resources", href="/page-4", active="exact"),
                 ],
                 vertical=True,
@@ -701,24 +780,25 @@ def render_page_content(pathname):
                 dcc.Tab(label='Outsourced Placements', value='tab-1', style=tab_style, selected_style=tab_selected_style),
                 dcc.Tab(label='Outsourced Spending', value='tab-2', style=tab_style, selected_style=tab_selected_style),
                 dcc.Tab(label='Residential Care Providers', value='tab-3', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Outsourcing Geographies', value='tab-4', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Childrens homes exits/entries', value='tab-4', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Outsourcing Geographies', value='tab-5', style=tab_style, selected_style=tab_selected_style),
             ], style=tabs_styles),
             html.Div(id='page-1-tabs-content')
         ])
     elif pathname == "/page-2":
         return html.Div([
-            dcc.Tabs(id="page-2-tabs", value='tab-5', children=[
-                dcc.Tab(label='Ofsted ratings', value='tab-5', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Children outcomes', value='tab-6', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Placement quality', value='tab-7', style=tab_style, selected_style=tab_selected_style),
+            dcc.Tabs(id="page-2-tabs", value='tab-6', children=[
+                dcc.Tab(label='Ofsted ratings', value='tab-6', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Children outcomes', value='tab-7', style=tab_style, selected_style=tab_selected_style),
+                dcc.Tab(label='Placement quality', value='tab-8', style=tab_style, selected_style=tab_selected_style),
             ], style=tabs_styles),
             html.Div(id='page-2-tabs-content')
         ])
     elif pathname == "/page-3":
         return html.Div([
-            dcc.Tabs(id="page-3-tabs", value='tab-8', children=[
-                dcc.Tab(label='Local authority comparison', value='tab-8', style=tab_style, selected_style=tab_selected_style),
-                dcc.Tab(label='Provider comparison', value='tab-9', style=tab_style, selected_style=tab_selected_style),
+            dcc.Tabs(id="page-3-tabs", value='tab-9', children=[
+                dcc.Tab(label='Local authority comparison', value='tab-9', style=tab_style, selected_style=tab_selected_style),
+             #  dcc.Tab(label='Provider comparison', value='tab-10', style=tab_style, selected_style=tab_selected_style),
                 ], style=tabs_styles),
             html.Div(id='page-3-tabs-content')
         ])
@@ -811,6 +891,35 @@ def render_page_1_content(tab):
             ])
     elif tab == 'tab-4':
         return html.Div([
+            html.H1("Children's homes entering or leaving the market"),
+            html.H3("Exits or Entries"),
+            dcc.Dropdown(
+              id='exit_entry_drop',
+              options=[
+                 {'label': la, 'value': la} for la in exitdata['leave_join'].unique()
+              ],
+              value="Entries"
+            ),
+            html.H3("Select a Local Authority"),
+            dcc.Dropdown(
+              id='exit-local-authority-dropdown',
+              options=[
+                 {'label': la, 'value': la} for la in exitdata['Local.authority'].unique()
+              ],
+              value="All"
+            ),
+            html.H3("Select Number of Homes or Places"),
+            dcc.Dropdown(
+                 id='exit-homes-or-places-dropdown',
+                 options=[
+                     {'label': hop, 'value': hop} for hop in exitdata['Homes_or_places'].unique()
+                 ],
+                value=exitdata['Homes_or_places'].unique()[0]
+            ),
+            dcc.Graph(id='exits_entries_plot')
+            ])
+    elif tab == 'tab-5':
+        return html.Div([
             html.H1("Outsourcing Geographies"),
             html.H3("Select a measure of outsourcing"),
             dcc.Dropdown(
@@ -824,7 +933,7 @@ def render_page_1_content(tab):
 
 @app.callback(Output('page-2-tabs-content', 'children'), [Input('page-2-tabs', 'value')])
 def render_page_2_content(tab):
-    if tab == 'tab-5':
+    if tab == 'tab-6':
         return  html.Div([
             html.H1('Ofsted ratings of active children homes:'),
             html.Hr(),
@@ -839,7 +948,7 @@ def render_page_2_content(tab):
             html.Hr(),
             dcc.Graph(id='ofsted-plot',style={'height': '800px'})
         ])
-    elif tab == 'tab-6':
+    elif tab == 'tab-7':
         return html.Div([
             html.H1('Outcomes for children in care and care leavers'),
             html.H3('Select a Local Authority'),
@@ -867,7 +976,7 @@ def render_page_2_content(tab):
             dcc.Graph(id='outcome_plot')
 
         ])
-    elif tab == 'tab-7':
+    elif tab == 'tab-8':
         return html.Div([
             html.H1('Quality of placements'),
             html.H3('Select a Local Authority'),
@@ -898,7 +1007,7 @@ def render_page_2_content(tab):
 
 @app.callback(Output('page-3-tabs-content', 'children'), [Input('page-3-tabs', 'value')])
 def render_page_3_content(tab):
-    if tab == 'tab-8':
+    if tab == 'tab-9':
         return html.Div([
             dcc.Dropdown(
                 id='la-dropdown6',
@@ -966,7 +1075,12 @@ def render_page_4_content(tab):
             ]),
             html.H6("Research on outsourcing of healthcare"),
                 html.Li(html.A("What is the impact of outsourcing healthcare services on quality of care?", href="https://www.thelancet.com/journals/lanpub/article/PIIS2468-2667(22)00133-5/fulltext?trk=organization_guest_main-feed-card_feed-article-content")),
-                html.Li(html.A("Why do NHS commissioners outsource healthcare services?", href="https://www.sciencedirect.com/science/article/pii/S0168851023002269?via%3Dihub"))        ])
+                html.Li(html.A("Why do NHS commissioners outsource healthcare services?", href="https://www.sciencedirect.com/science/article/pii/S0168851023002269?via%3Dihub")),
+            html.H3("Project Information"),
+            html.Ul([
+                html.Li(html.A("We are incredibly grateful for the support of Nuffield Foundation for funding this project, you can view our project homepage here:", href="https://www.nuffieldfoundation.org/project/evidencing-the-outsourcing-of-social-care-provision-in-england")),
+                html.Li(html.A("The project has been funded by the Nuffield Foundation, but the view expressed are those of the authors and not necessarily the Foundation. Visit: www.nuffieldfoundation.org", href="www.nuffieldfoundation.org"))
+            ])        ])
     elif tab == 'tab-12':
         return html.Div([
             html.H3("Meet the team:"),
@@ -1124,6 +1238,33 @@ def update_plot(selected_local_authority, selected_homes_or_places):
 
 
 
+
+@app.callback(Output('exits_entries_plot', 'figure'),Input('exit_entry_drop', 'value'), Input('exit-local-authority-dropdown', 'value'),Input('exit-homes-or-places-dropdown', 'value'))
+def update_plot(selected_exits_entries, selected_local_authority, selected_homes_or_places):
+    filtered_exits = exitdata[(exitdata['leave_join'] == selected_exits_entries) & (exitdata['Local.authority'] == selected_local_authority) & (exitdata['Homes_or_places'] == selected_homes_or_places)]
+
+    custom_colors = {"For-profit": "#1f77b4", "Local Authority": "#ff7f0e", "Third Sector": "#2ca02c"}
+
+
+
+
+   # Convert 'year' column to categorical with ordered levels
+    filtered_exits['year'] = pd.Categorical(filtered_exits['year'], ordered=True)
+
+    fig = px.bar(filtered_exits, x='year', y='value', color='Sector',
+                 barmode='group', color_discrete_map=custom_colors,
+                 category_orders={'year': filtered_exits['year'].sort_values().unique()})
+    
+    fig.update_layout(
+        xaxis_title='Year',
+        yaxis_title='Number',
+        title='Childrens home entries or exits'
+    )
+    
+    return fig
+
+
+
 @app.callback(Output('outsourcing-map', 'figure'),Input('variable-dropdown', 'value'))
 def update_plot(selected_variable):
 
@@ -1213,6 +1354,9 @@ def update_scatter_plot(selected_domain):
         plot_bgcolor='rgba(0,0,0,0)'  # Set the background color to transparent
     )
 
+    print(filtered_active_chomes['Circle'].unique())
+
+
     for group, group_data in filtered_active_chomes.groupby('Circle'):
         # Calculate the position for the label above the group
         x_label = group_data['Jittered_x'].mean()
@@ -1220,6 +1364,7 @@ def update_scatter_plot(selected_domain):
 
         # Get the mode (most common category) for the 'Overall_Experiences_Mapping' in the group
         rating = group_data['Overall_Experiences_Mapping'].value_counts().idxmax()
+
 
         # Add a text annotation to the figure
         ofsted_fig.add_annotation(
@@ -1233,6 +1378,9 @@ def update_scatter_plot(selected_domain):
 
 
     return ofsted_fig
+
+
+
 
 
 
@@ -1383,8 +1531,8 @@ def update_variable_options(selected_subcategory):
         variable_options = []  # No options if no subcategory is selected
     return variable_options
 
-@app.callback(Output('compare_plot', 'figure'), [Input('la-dropdown6', 'value'), Input('data-dropdown', 'value'), Input('variable-dropdown6', 'value')])
-def update_comparison_plot(selected_local_authorities, selected_dataset, selected_variable):
+@app.callback(Output('compare_plot', 'figure'), [Input('la-dropdown6', 'value'), Input('data-dropdown', 'value'), Input('subcategory-dropdown6', 'value'), Input('variable-dropdown6', 'value')])
+def update_comparison_plot(selected_local_authorities, selected_dataset, selected_subcategory, selected_variable):
     if not selected_local_authorities or not selected_dataset or not selected_variable:
         return {
             'data': []
@@ -1396,6 +1544,7 @@ def update_comparison_plot(selected_local_authorities, selected_dataset, selecte
                               (Outcomes['LA_Name'].isin(selected_local_authorities))]
     elif selected_dataset == 'Expenditure':
         filtered_df = Expenditure[(Expenditure['variable'] == selected_variable) &
+                                  (Expenditure['subcategory'] == selected_subcategory)&
                                   (Expenditure['LA_Name'].isin(selected_local_authorities))]
     elif selected_dataset == 'Placements':
         filtered_df = Placements[(Placements['variable'] == selected_variable) &
@@ -1418,6 +1567,8 @@ def update_comparison_plot(selected_local_authorities, selected_dataset, selecte
         fig.add_trace(go.Scatter(x=line_data['year'], y=line_data['percent'], mode='lines', name=la))
 
     return fig
+
+
 
 
 
