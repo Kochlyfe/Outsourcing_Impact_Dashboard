@@ -1543,6 +1543,7 @@ def update_comparison_plot(selected_local_authorities, selected_dataset, selecte
     # Select the appropriate DataFrame based on the selected dataset and variable
     if selected_dataset == 'Outcomes':
         filtered_df = Outcomes[(Outcomes['variable'] == selected_variable) &
+                               (Outcomes['subcategory'] == selected_subcategory)&
                               (Outcomes['LA_Name'].isin(selected_local_authorities))]
     elif selected_dataset == 'Expenditure':
         filtered_df = Expenditure[(Expenditure['variable'] == selected_variable) &
@@ -1550,6 +1551,7 @@ def update_comparison_plot(selected_local_authorities, selected_dataset, selecte
                                   (Expenditure['LA_Name'].isin(selected_local_authorities))]
     elif selected_dataset == 'Placements':
         filtered_df = Placements[(Placements['variable'] == selected_variable) &
+                                  (Placements['subcategory'] == selected_subcategory) &
                                  (Placements['LA_Name'].isin(selected_local_authorities))]
     else:
         return {
