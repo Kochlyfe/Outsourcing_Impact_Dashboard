@@ -138,6 +138,13 @@ merged2.loc[(merged2['variable'] == 'Total Children Looked After') & (merged2['s
 
 #outcomes_df = outcomes_df.groupby(['year']).mean().reset_index()
 
+
+####exits entries####
+
+exitdata = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/childrens_social_care_data/main/Final_Data/outputs/enter_exit.csv", encoding='ISO-8859-1')
+
+
+
 ##### provider bars #####
 
 ProviderData = pd.read_csv("https://raw.githubusercontent.com/BenGoodair/childrens_social_care_data/main/Final_Data/outputs/Provider_data.csv", encoding='ISO-8859-1')
