@@ -672,20 +672,6 @@ from dash.exceptions import PreventUpdate
 app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
 
 
-# Define the watermark text
-watermark_text = html.Div(
-    "Under-development; Not for dissemination",
-    style={
-        "position": "fixed",
-        "bottom": 5,
-        "right": 5,
-        "color": "rgba(255, 0, 0, 0.5)",  # Adjust color and opacity as needed
-        "font-size": "38px",
-        "font-weight": "bold",
-        "pointer-events": "none",  # Make sure the watermark doesn't interfere with clicks
-        "z-index": "9999",  # Ensure the watermark is on top of other elements
-    }
-)
 
 
 
@@ -758,7 +744,7 @@ watermark = html.Div(
         "right": "50%",   # Adjust the horizontal position
         "transform": "translate(50%, 50%) rotate(-45deg)",  # Rotate and position
         "color": "rgba(255, 0, 0, 0.4)",
-        "fontSize": "36px",  # Increase the font size for better visibility
+        "fontSize": "66px",  # Increase the font size for better visibility
         "zIndex": "9999",
     }
 )
