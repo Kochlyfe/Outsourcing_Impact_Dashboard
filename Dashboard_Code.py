@@ -744,7 +744,7 @@ watermark = html.Div(
         "right": "50%",   # Adjust the horizontal position
         "transform": "translate(50%, 50%) rotate(-45deg)",  # Rotate and position
         "color": "rgba(255, 0, 0, 0.4)",
-        "fontSize": "66px",  # Increase the font size for better visibility
+        "fontSize": "76px",  # Increase the font size for better visibility
         "zIndex": "9999",
     }
 )
