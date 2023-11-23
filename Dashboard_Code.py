@@ -672,6 +672,23 @@ from dash.exceptions import PreventUpdate
 app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
 
 
+# Define the watermark text
+watermark_text = html.Div(
+    "Under-development; Not for dissemination",
+    style={
+        "position": "fixed",
+        "bottom": 5,
+        "right": 5,
+        "color": "rgba(255, 0, 0, 0.5)",  # Adjust color and opacity as needed
+        "font-size": "38px",
+        "font-weight": "bold",
+        "pointer-events": "none",  # Make sure the watermark doesn't interfere with clicks
+        "z-index": "9999",  # Ensure the watermark is on top of other elements
+    }
+)
+
+
+
 #server = app.server
 
 tabs_styles = {
@@ -733,8 +750,28 @@ sidebar = html.Div(
 
 content = html.Div(id="page-content", style=CONTENT_STYLE)
 
+watermark = html.Div(
+    "Under-development; Not for dissemination",
+    style={
+        "position": "fixed",
+        "bottom": "50%",  # Adjust the vertical position
+        "right": "50%",   # Adjust the horizontal position
+        "transform": "translate(50%, 50%) rotate(-45deg)",  # Rotate and position
+        "color": "rgba(255, 0, 0, 0.4)",
+        "fontSize": "36px",  # Increase the font size for better visibility
+        "zIndex": "9999",
+    }
+)
 
-app.layout = html.Div([dcc.Location(id="url"), sidebar, content])
+
+# Incorporate the watermark into your layout
+app.layout = html.Div([dcc.Location(id="url"), sidebar, content, watermark])
+
+
+# Add the watermark text to the content of each page
+def add_watermark_to_content(page_content):
+    return html.Div([page_content, watermark_text])
+
 
 
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
