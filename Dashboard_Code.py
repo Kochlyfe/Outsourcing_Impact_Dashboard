@@ -754,11 +754,6 @@ watermark = html.Div(
 app.layout = html.Div([dcc.Location(id="url"), sidebar, content, watermark])
 
 
-# Add the watermark text to the content of each page
-def add_watermark_to_content(page_content):
-    return html.Div([page_content, watermark_text])
-
-
 
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def render_page_content(pathname):
