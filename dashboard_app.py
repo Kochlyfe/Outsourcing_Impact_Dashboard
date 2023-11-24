@@ -713,6 +713,8 @@ CONTENT_STYLE = {
     "transform": "scale(0.67)",  # Adjust the scale factor as needed
     "transform-origin": "top left",
     "padding": "2rem 1rem",
+    "width": "150%",  # Approximately compensating for 33% scale-down
+    "height": "150%",  # Approximately compensating for 33% scale-down
 }
 
 sidebar = html.Div(
