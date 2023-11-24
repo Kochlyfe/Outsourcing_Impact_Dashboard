@@ -29,7 +29,7 @@ from plotly.colors import sequential
 
 
 
-pd.set_option('display.max_rows', None)
+#pd.set_option('display.max_rows', None)
 
 
 ####HEALTHY CAKES####
