@@ -787,8 +787,14 @@ def render_page_content(pathname):
                 pills=True,
             ),
             html.Hr(),
-            html.P("Acknowledgements: we are grateful to the support from Nuffield Foundation who motivated this dashboard."),
-            html.P("A proof-of-concept version of this dashboard was first developed by Carolin Kroeger, Dunja Matic and Ben Goodair - we are grateful to the input of all team members."),
+            html.Li([
+                    html.Img(src="https://github.com/BenGoodair/Outsourcing_Impact_Dashboard/blob/main/Images/Master-RGB-DarkGreen.png?raw=true", style={"width": "100px", "height": "100px"}),
+                    html.Div([
+                        html.H4("Acknowledgements"),
+                        html.P("The Nuffield Foundation is an independent charitable trust with a mission to advance social well-being. It funds research that informs social policy, primarily in Education, Welfare, and Justice. The Nuffield Foundation is the founder and co-funder of the Nuffield Council on Bioethics, the Ada Lovelace Institute and the Nuffield Family Justice Observatory. The Foundation has funded this project, but the views expressed are those of the authors and not necessarily the Foundation. Website: www.nuffieldfoundation.org Twitter: @NuffieldFound"),
+                        html.P("A proof-of-concept version of this dashboard was first developed by Carolin Kroeger, Dunja Matic and Ben Goodair - we are grateful to the input of all team members."),
+                    ], style={"display": "inline-block", "vertical-align": "top"})
+                ])
         ], style={"padding": "2rem"})
     elif pathname == "/page-1":
         return html.Div([
