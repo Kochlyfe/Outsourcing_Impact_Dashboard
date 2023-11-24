@@ -1,7 +1,7 @@
 # Outsourcing_Impact_Dashboard
 A dashboard to present the levels and impacts of privatisation in England's social care sectors
 
-Welcome to the repository for our outsourcing impacts tracker. 
+Welcome to the repository for our outsourcing impacts tracker. Ignore most of the files - this repo needs cleaning up.
 
 The dashboard is built with python's Dash module and deployed via [Render](https://render.com/). The 'dashboard_app' file is the final file which is used to deploy the app. the 'dashboard_code' file is what I use to run the dashboard on my local machine.
 
