@@ -708,6 +708,8 @@ SIDEBAR_STYLE = {
 CONTENT_STYLE = {
     "margin-left": "18rem",
     "margin-right": "2rem",
+    "transform": "scale(0.67)",  # Adjust the scale factor as needed
+    "transform-origin": "top left",
     "padding": "2rem 1rem",
 }
 
