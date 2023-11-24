@@ -701,8 +701,8 @@ SIDEBAR_STYLE = {
     "width": "16rem",
     "padding": "2rem 1rem",
     "background-color": "#f8f9fa",
-    "transform": "scale(0.67)",  # Adjust the scale factor as needed
-    "transform-origin": "top left",
+#    "transform": "scale(0.67)",  # Adjust the scale factor as needed
+#    "transform-origin": "top left",
 }
 
 # the styles for the main content position it to the right of the sidebar and
@@ -710,11 +710,11 @@ SIDEBAR_STYLE = {
 CONTENT_STYLE = {
     "margin-left": "18rem",
     "margin-right": "2rem",
-    "transform": "scale(0.67)",  # Adjust the scale factor as needed
-    "transform-origin": "top left",
+#    "transform": "scale(0.67)",  # Adjust the scale factor as needed
+#    "transform-origin": "top left",
     "padding": "2rem 1rem",
-    "width": "150%",  # Approximately compensating for 33% scale-down
-    "height": "150%",  # Approximately compensating for 33% scale-down
+#    "width": "150%",  # Approximately compensating for 33% scale-down
+#    "height": "150%",  # Approximately compensating for 33% scale-down
 }
 
 sidebar = html.Div(
