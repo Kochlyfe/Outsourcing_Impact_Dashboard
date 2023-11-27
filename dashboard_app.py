@@ -703,17 +703,19 @@ SIDEBAR_STYLE = {
     "background-color": "#f8f9fa",
     "transform": "scale(0.67)",  # Adjust the scale factor as needed
     "transform-origin": "top left",
+    "height": "150%",  # Approximately compensating for 33% scale-down
+
 }
 
 # the styles for the main content position it to the right of the sidebar and
 # add some padding.
 CONTENT_STYLE = {
-    "margin-left": "10rem",
+    "margin-left": "11rem",
     "margin-right": "16rem",
     "transform": "scale(0.67)",  # Adjust the scale factor as needed
     "transform-origin": "top left",
     "padding": "2rem 1rem",
-    "width": "150%",  # Approximately compensating for 33% scale-down
+    "width": "133%",  # Approximately compensating for 33% scale-down
     "height": "150%",  # Approximately compensating for 33% scale-down
 }
 
