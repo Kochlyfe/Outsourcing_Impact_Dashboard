@@ -702,16 +702,22 @@ SIDEBAR_STYLE = {
     "width": "16rem",
     "padding": "2rem 1rem",
     "background-color": "#f8f9fa",
+    "transform": "scale(0.67)",  # Adjust the scale factor as needed
+    "transform-origin": "top left",
+    "height": "150%",  # Approximately compensating for 33% scale-down
+
 }
 
 # the styles for the main content position it to the right of the sidebar and
 # add some padding.
 CONTENT_STYLE = {
-    "margin-left": "18rem",
-    "margin-right": "2rem",
+    "margin-left": "11rem",
+    "margin-right": "16rem",
     "transform": "scale(0.67)",  # Adjust the scale factor as needed
     "transform-origin": "top left",
     "padding": "2rem 1rem",
+    "width": "125%",  # Approximately compensating for 33% scale-down
+    "height": "150%",  # Approximately compensating for 33% scale-down
 }
 
 sidebar = html.Div(
@@ -738,6 +744,7 @@ sidebar = html.Div(
 
 content = html.Div(id="page-content", style=CONTENT_STYLE)
 
+
 watermark = html.Div(
     "Under-development; Not for dissemination",
     style={
@@ -746,10 +753,11 @@ watermark = html.Div(
         "right": "50%",   # Adjust the horizontal position
         "transform": "translate(50%, 50%) rotate(-45deg)",  # Rotate and position
         "color": "rgba(255, 0, 0, 0.4)",
-        "fontSize": "76px",  # Increase the font size for better visibility
+        "fontSize": "70px",  # Increase the font size for better visibility
         "zIndex": "9999",
     }
 )
+
 
 
 # Incorporate the watermark into your layout
