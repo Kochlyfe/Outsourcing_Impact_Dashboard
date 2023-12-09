@@ -19,6 +19,9 @@ reverse_geocoder = "^1.5.1"
 gunicorn = "^21.2.0"
 statsmodels = "^0.14.0"
 
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.1.7"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
