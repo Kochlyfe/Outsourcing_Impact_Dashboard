@@ -14,20 +14,17 @@ from dash.exceptions import PreventUpdate
 ### Init datasets
 # Get the directory of the current script
 dir_path = os.path.dirname(os.path.abspath(__file__))
+processed_path = os.path.join(dir_path, "..", "data", "processed")
 
 # Define the paths to the CSV files relative to the script directory
-la_df_path = os.path.join(dir_path, "..", "data", "processed", "la.csv")
-nobs_final_path = os.path.join(dir_path, "..", "data", "processed", "nobs.csv")
-exitdata_path = os.path.join(dir_path, "..", "data", "processed", "exits.csv")
-merged2_path = os.path.join(dir_path, "..", "data", "processed", "merged.geojson")
-active_chomes_path = os.path.join(
-    dir_path, "..", "data", "processed", "active_chomes.csv"
-)
-outcomes_df_path = os.path.join(dir_path, "..", "data", "processed", "outcomes.csv")
-placements_df_path = os.path.join(dir_path, "..", "data", "processed", "placements.csv")
-expenditures_df_path = os.path.join(
-    dir_path, "..", "data", "processed", "expenditures.csv"
-)
+la_df_path = os.path.join(processed_path, "la.csv")
+nobs_final_path = os.path.join(processed_path, "nobs.csv")
+exitdata_path = os.path.join(processed_path, "exits.csv")
+merged2_path = os.path.join(processed_path, "merged.geojson")
+active_chomes_path = os.path.join(processed_path, "active_chomes.csv")
+outcomes_df_path = os.path.join(processed_path, "outcomes.csv")
+placements_df_path = os.path.join(processed_path, "placements.csv")
+expenditures_df_path = os.path.join(processed_path, "expenditures.csv")
 
 # Read the CSV files
 la_df = pd.read_csv(la_df_path)
