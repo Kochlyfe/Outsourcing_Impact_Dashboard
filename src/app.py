@@ -131,18 +131,27 @@ app.layout = html.Div([dcc.Location(id="url"), sidebar, content, watermark])
 
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def render_page_content(pathname):
-    if pathname == "/":
-        return welcome.render_page()
-    elif pathname == "/page-1":
-        return outsourcing_levels.render_page(
+    path_mapping = {
+        "/": welcome.render_page,
+        "/page-1": lambda: outsourcing_levels.render_page(
             tab_style, tab_selected_style, tabs_styles
-        )
-    elif pathname == "/page-2":
-        return quality_impacts.render_page(tab_style, tab_selected_style, tabs_styles)
-    elif pathname == "/page-3":
-        return comparison_tool.render_page(tab_style, tab_selected_style, tabs_styles)
-    elif pathname == "/page-4":
-        return links.render_page(tab_style, tab_selected_style, tabs_styles)
+        ),
+        "/page-2": lambda: quality_impacts.render_page(
+            tab_style, tab_selected_style, tabs_styles
+        ),
+        "/page-3": lambda: comparison_tool.render_page(
+            tab_style, tab_selected_style, tabs_styles
+        ),
+        "/page-4": lambda: links.render_page(
+            tab_style, tab_selected_style, tabs_styles
+        ),
+    }
+
+    render_page = path_mapping.get(pathname)
+
+    if render_page is not None:
+        return render_page()
+
     # If the user tries to reach a different page, return a 404 message
     return html.Div(
         [
