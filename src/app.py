@@ -11,6 +11,8 @@ import plotly.express as px
 import dash
 from dash.exceptions import PreventUpdate
 
+from pages import welcome, outsourcing_levels, quality_impacts, comparison_tool, links
+
 ### Init datasets
 # Get the directory of the current script
 dir_path = os.path.dirname(os.path.abspath(__file__))
@@ -30,11 +32,12 @@ expenditures_df_path = os.path.join(processed_path, "expenditures.csv")
 la_df = pd.read_csv(la_df_path)
 nobs_final = pd.read_csv(nobs_final_path)
 exitdata = pd.read_csv(exitdata_path)
-merged2 = gpd.read_file(merged2_path)
 active_chomes = pd.read_csv(active_chomes_path)
 outcomes_df = pd.read_csv(outcomes_df_path)
 placements_df = pd.read_csv(placements_df_path)
 expenditures_df = pd.read_csv(expenditures_df_path)
+# Read geojson file
+merged2 = gpd.read_file(merged2_path)
 
 ####Dashboard####
 app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
@@ -129,194 +132,17 @@ app.layout = html.Div([dcc.Location(id="url"), sidebar, content, watermark])
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def render_page_content(pathname):
     if pathname == "/":
-        return html.Div(
-            [
-                html.H2(
-                    "Welcome to the Outsourcing Impacts Tracker Dashboard",
-                    className="display-7",
-                ),
-                html.Hr(),
-                html.H4("Purpose of the Dashboard"),
-                html.P(
-                    "The Outsourcing Impacts Dashboard aims to provide policymakers with valuable insights into outsourcing levels and their impact on quality of social care services in England. By visualizing outsoucing levels, service quality data, and related information, this dashboard assists policymakers in making informed decisions to address the challenges posed by increasing need for social care."
-                ),
-                html.H4("How to Use"),
-                html.P(
-                    "Navigate through the tabs at the sidebar to access different sections of the dashboard. Each section provides specific information and visualizations related to outsourcing levels and its impacts. Use the interactive components to explore the data and gain insights."
-                ),
-                html.P(
-                    "We encourage policymakers to utilize this dashboard as a resource for evidence-based decision-making. By considering the data, visualizations, and resources provided here, policymakers can better understand the magnitude of outsouring and the potential risks associated with it. Additionally, we recommend referring to the 'Links to Resources' section for further in-depth research and reports."
-                ),
-                html.Hr(),
-                html.H4("Important Note"),
-                html.P(
-                    "This dashboard is for informational purposes only and should not be used as the sole basis for policymaking. It is crucial to consult domain experts, conduct further analysis, and consider additional factors when making policy decisions."
-                ),
-                html.Hr(),
-                html.H5("For more information, please visit the following pages:"),
-                dbc.Nav(
-                    [
-                        dbc.NavLink(
-                            "Outsourcing levels", href="/page-1", active="exact"
-                        ),
-                        dbc.NavLink("Quality Impacts", href="/page-2", active="exact"),
-                        dbc.NavLink("Comparison tool", href="/page-3", active="exact"),
-                        dbc.NavLink(
-                            "Further Resources", href="/page-4", active="exact"
-                        ),
-                    ],
-                    vertical=True,
-                    pills=True,
-                ),
-                html.Hr(),
-                html.Li(
-                    [
-                        html.Img(
-                            src="https://github.com/BenGoodair/Outsourcing_Impact_Dashboard/blob/main/Images/Master-RGB-DarkGreen.png?raw=true",
-                            style={"width": "150px", "height": "100px"},
-                        ),
-                        html.Div(
-                            [
-                                html.H4("Acknowledgements"),
-                                html.P(
-                                    "The Nuffield Foundation is an independent charitable trust with a mission to advance social well-being. It funds research that informs social policy, primarily in Education, Welfare, and Justice. The Nuffield Foundation is the founder and co-funder of the Nuffield Council on Bioethics, the Ada Lovelace Institute and the Nuffield Family Justice Observatory. The Foundation has funded this project, but the views expressed are those of the authors and not necessarily the Foundation. Website: www.nuffieldfoundation.org Twitter: @NuffieldFound"
-                                ),
-                                html.P(
-                                    "A proof-of-concept version of this dashboard was first developed by Carolin Kroeger, Dunja Matic and Ben Goodair - we are grateful to the input of all team members."
-                                ),
-                            ],
-                            style={"display": "inline-block", "vertical-align": "top"},
-                        ),
-                    ]
-                ),
-            ],
-            style={"padding": "2rem"},
-        )
+        return welcome.render_page()
     elif pathname == "/page-1":
-        return html.Div(
-            [
-                dcc.Tabs(
-                    id="page-1-tabs",
-                    value="tab-1",
-                    children=[
-                        dcc.Tab(
-                            label="Outsourced Placements",
-                            value="tab-1",
-                            style=tab_style,
-                            selected_style=tab_selected_style,
-                        ),
-                        dcc.Tab(
-                            label="Outsourced Spending",
-                            value="tab-2",
-                            style=tab_style,
-                            selected_style=tab_selected_style,
-                        ),
-                        dcc.Tab(
-                            label="Residential Care Providers",
-                            value="tab-3",
-                            style=tab_style,
-                            selected_style=tab_selected_style,
-                        ),
-                        dcc.Tab(
-                            label="Childrens homes exits/entries",
-                            value="tab-4",
-                            style=tab_style,
-                            selected_style=tab_selected_style,
-                        ),
-                        dcc.Tab(
-                            label="Outsourcing Geographies",
-                            value="tab-5",
-                            style=tab_style,
-                            selected_style=tab_selected_style,
-                        ),
-                    ],
-                    style=tabs_styles,
-                ),
-                html.Div(id="page-1-tabs-content"),
-            ]
+        return outsourcing_levels.render_page(
+            tab_style, tab_selected_style, tabs_styles
         )
     elif pathname == "/page-2":
-        return html.Div(
-            [
-                dcc.Tabs(
-                    id="page-2-tabs",
-                    value="tab-6",
-                    children=[
-                        dcc.Tab(
-                            label="Ofsted ratings",
-                            value="tab-6",
-                            style=tab_style,
-                            selected_style=tab_selected_style,
-                        ),
-                        dcc.Tab(
-                            label="Children outcomes",
-                            value="tab-7",
-                            style=tab_style,
-                            selected_style=tab_selected_style,
-                        ),
-                        dcc.Tab(
-                            label="Placement quality",
-                            value="tab-8",
-                            style=tab_style,
-                            selected_style=tab_selected_style,
-                        ),
-                    ],
-                    style=tabs_styles,
-                ),
-                html.Div(id="page-2-tabs-content"),
-            ]
-        )
+        return quality_impacts.render_page(tab_style, tab_selected_style, tabs_styles)
     elif pathname == "/page-3":
-        return html.Div(
-            [
-                dcc.Tabs(
-                    id="page-3-tabs",
-                    value="tab-9",
-                    children=[
-                        dcc.Tab(
-                            label="Local authority comparison",
-                            value="tab-9",
-                            style=tab_style,
-                            selected_style=tab_selected_style,
-                        ),
-                        #  dcc.Tab(label='Provider comparison', value='tab-10', style=tab_style, selected_style=tab_selected_style),
-                    ],
-                    style=tabs_styles,
-                ),
-                html.Div(id="page-3-tabs-content"),
-            ]
-        )
+        return comparison_tool.render_page(tab_style, tab_selected_style, tabs_styles)
     elif pathname == "/page-4":
-        return html.Div(
-            [
-                dcc.Tabs(
-                    id="page-4-tabs",
-                    value="tab-10",
-                    children=[
-                        dcc.Tab(
-                            label="Data download",
-                            value="tab-10",
-                            style=tab_style,
-                            selected_style=tab_selected_style,
-                        ),
-                        dcc.Tab(
-                            label="Educational resources",
-                            value="tab-11",
-                            style=tab_style,
-                            selected_style=tab_selected_style,
-                        ),
-                        dcc.Tab(
-                            label="Contact and feedback",
-                            value="tab-12",
-                            style=tab_style,
-                            selected_style=tab_selected_style,
-                        ),
-                    ],
-                    style=tabs_styles,
-                ),
-                html.Div(id="page-4-tabs-content"),
-            ]
-        )
+        return links.render_page(tab_style, tab_selected_style, tabs_styles)
     # If the user tries to reach a different page, return a 404 message
     return html.Div(
         [
@@ -1498,4 +1324,4 @@ def update_comparison_plot(
 
 
 if __name__ == "__main__":
-    app.run_server(debug=False)
+    app.run_server(debug=True)
