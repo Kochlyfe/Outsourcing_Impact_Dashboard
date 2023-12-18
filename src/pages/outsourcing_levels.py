@@ -1,4 +1,5 @@
 from dash import html, dcc, Output, Input
+import plotly.express as px
 
 from datasets import DataContainer
 
@@ -191,3 +192,63 @@ def register_callbacks(app, dataframes: DataContainer):
                     dcc.Graph(id="outsourcing-map", style={"height": "1000px"}),
                 ]
             )
+
+    @app.callback(Output("scatter-plot", "figure"), Input("LA-dropdown", "value"))
+    def update_scatter_plot(selected_county):
+        filtered_df = la_df[la_df["variable"] == "Private provision"][
+            ["LA_Name", "year", "percent"]
+        ]
+
+        if selected_county is not None:
+            filtered_df = filtered_df[la_df["LA_Name"] == selected_county]
+
+        fig1 = px.scatter(
+            filtered_df,
+            x="year",
+            y="percent",
+            color="percent",
+            trendline="lowess",
+            color_continuous_scale="ylorrd",
+        )
+        fig1.update_traces(marker=dict(size=5))
+        fig1.update_layout(
+            xaxis_title="Year",
+            yaxis_title="For-profit placements (%)",
+            title="Percent of children placed with for-profit providers 2011-22",
+            coloraxis_colorbar=dict(title="For-profit %"),
+        )
+
+        return fig1
+
+    @app.callback(
+        Output("scatter-plot2", "figure"),
+        Input("LA-dropdown3", "value"),
+        Input("spend-dropdown", "value"),
+    )
+    def update_scatter_plot2(selected_county, selected_expenditure):
+        filtered_df_spend = la_df[
+            (la_df["category"] == "Expenditure")
+            & (la_df["subcategory"] == "For_profit")
+            & (la_df["variable"] == selected_expenditure)
+        ]
+
+        if selected_county is not None:
+            filtered_df_spend = filtered_df_spend[la_df["LA_Name"] == selected_county]
+
+        fig2 = px.scatter(
+            filtered_df_spend,
+            x="year",
+            y="percent",
+            color="percent",
+            trendline="lowess",
+            color_continuous_scale="ylorrd",
+        )
+        fig2.update_traces(marker=dict(size=5))
+        fig2.update_layout(
+            xaxis_title="Year",
+            yaxis_title="For-profit expenditure (%)",
+            title="Percent of expenditure on for-profit providers 2011-22",
+            coloraxis_colorbar=dict(title="For-profit %"),
+        )
+
+        return fig2
