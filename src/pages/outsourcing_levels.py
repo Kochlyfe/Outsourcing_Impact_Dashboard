@@ -1,5 +1,6 @@
 from dash import html, dcc, Output, Input
 import plotly.express as px
+import plotly.graph_objects as go
 
 from datasets import DataContainer
 
@@ -252,3 +253,132 @@ def register_callbacks(app, dataframes: DataContainer):
         )
 
         return fig2
+
+    @app.callback(
+        Output("child-homes-plot", "figure"),
+        Input("local-authority-dropdown", "value"),
+        Input("homes-or-places-dropdown", "value"),
+    )
+    def update_plot(selected_local_authority, selected_homes_or_places):
+        filtered_nobs = nobs_final[
+            (nobs_final["Local.authority"] == selected_local_authority)
+            & (nobs_final["Homes or places"] == selected_homes_or_places)
+        ]
+
+        custom_colors = {
+            "For-profit": "#1f77b4",
+            "Local Authority": "#ff7f0e",
+            "Third Sector": "#2ca02c",
+        }
+
+        fig = px.scatter(
+            filtered_nobs,
+            x="time",
+            y="cumulative",
+            color="Sector",
+            color_discrete_map=custom_colors,
+        )
+
+        # Add a line trace
+        line_data = (
+            filtered_nobs[filtered_nobs["time"] > -211]
+            .groupby(["time", "Sector"])["cumulative"]
+            .sum()
+            .reset_index()
+        )
+        for sector in line_data["Sector"].unique():
+            sector_data = line_data[line_data["Sector"] == sector]
+            fig.add_trace(
+                go.Scatter(
+                    x=sector_data["time"],
+                    y=sector_data["cumulative"],
+                    mode="lines+markers",
+                    name=sector,
+                    line=dict(color=custom_colors[sector]),
+                    showlegend=False,
+                )
+            )  # Hide the legend for the line traces
+
+        # Define custom tick values and labels for the x-axis
+        custom_tick_values = [-11, -35, -59, -83, -107, -131, -155, -179, -203, -227]
+        custom_tick_labels = [
+            "2022",
+            "2020",
+            "2018",
+            "2016",
+            "2014",
+            "2012",
+            "2010",
+            "2008",
+            "2006",
+            "2004",
+        ]
+
+        # Update the x-axis with the custom tick values and labels
+        fig.update_xaxes(tickvals=custom_tick_values, ticktext=custom_tick_labels)
+
+        fig.update_layout(
+            title=f"Number of active children's homes ({selected_local_authority}, {selected_homes_or_places})",
+            xaxis_title="Year",
+            yaxis_title=f"Number of Children's residential{selected_homes_or_places}",
+        )
+        return fig
+
+    @app.callback(
+        Output("exits_entries_plot", "figure"),
+        Input("exit_entry_drop", "value"),
+        Input("exit-local-authority-dropdown", "value"),
+        Input("exit-homes-or-places-dropdown", "value"),
+    )
+    def update_exits_plot(
+        selected_exits_entries, selected_local_authority, selected_homes_or_places
+    ):
+        filtered_exits = exitdata[
+            (exitdata["leave_join"] == selected_exits_entries)
+            & (exitdata["Local.authority"] == selected_local_authority)
+            & (exitdata["Homes_or_places"] == selected_homes_or_places)
+        ]
+
+        custom_colors = {
+            "For-profit": "#1f77b4",
+            "Local Authority": "#ff7f0e",
+            "Third Sector": "#2ca02c",
+        }
+
+        fig = px.bar(
+            filtered_exits,
+            x="year",
+            y="value",
+            color="Sector",
+            barmode="group",
+            color_discrete_map=custom_colors,
+            category_orders={"year": filtered_exits["year"].sort_values().unique()},
+        )
+
+        fig.update_layout(
+            xaxis_title="Year",
+            yaxis_title="Number",
+            title="Childrens home entries or exits",
+        )
+
+        return fig
+
+    @app.callback(
+        Output("outsourcing-map", "figure"), Input("variable-dropdown", "value")
+    )
+    def update_outsourcing_map(selected_variable):
+        filtered_merged = merged2[merged2["variable"] == selected_variable]
+
+        map = px.choropleth_mapbox(
+            filtered_merged,
+            geojson=filtered_merged.geometry,
+            locations=filtered_merged.index,
+            color="percent",
+            color_continuous_scale="ylorrd",
+            center={"lat": 52.9781, "lon": -1.82360},
+            mapbox_style="open-street-map",
+            hover_name="LA_Name",
+            zoom=6,
+        )
+
+        return map
