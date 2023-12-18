@@ -1,7 +1,5 @@
-import os
 from dash import html, dcc, Output, Input
 import pandas as pd
-import geopandas as gpd
 
 import plotly.graph_objects as go
 import numpy as np
@@ -11,37 +9,28 @@ import plotly.express as px
 import dash
 from dash.exceptions import PreventUpdate
 
-from pages import welcome, outsourcing_levels, quality_impacts, comparison_tool, links
+from pages import welcome, quality_impacts, comparison_tool, links
+import pages.outsourcing_levels as ol
+from datasets import DataContainer
 
 ### Init datasets
-# Get the directory of the current script
-dir_path = os.path.dirname(os.path.abspath(__file__))
-processed_path = os.path.join(dir_path, "..", "data", "processed")
+data_container = DataContainer.load_data()
+dataframes_tuple = data_container.get_dataframes_as_namedtuple()
 
-# Define the paths to the CSV files relative to the script directory
-la_df_path = os.path.join(processed_path, "la.csv")
-nobs_final_path = os.path.join(processed_path, "nobs.csv")
-exitdata_path = os.path.join(processed_path, "exits.csv")
-merged2_path = os.path.join(processed_path, "merged.geojson")
-active_chomes_path = os.path.join(processed_path, "active_chomes.csv")
-outcomes_df_path = os.path.join(processed_path, "outcomes.csv")
-placements_df_path = os.path.join(processed_path, "placements.csv")
-expenditures_df_path = os.path.join(processed_path, "expenditures.csv")
-
-# Read the CSV files
-la_df = pd.read_csv(la_df_path)
-nobs_final = pd.read_csv(nobs_final_path)
-exitdata = pd.read_csv(exitdata_path)
-active_chomes = pd.read_csv(active_chomes_path)
-outcomes_df = pd.read_csv(outcomes_df_path)
-placements_df = pd.read_csv(placements_df_path)
-expenditures_df = pd.read_csv(expenditures_df_path)
-# Read geojson file
-merged2 = gpd.read_file(merged2_path)
+(
+    la_df,
+    nobs_final,
+    exitdata,
+    merged2,
+    active_chomes,
+    outcomes_df,
+    placements_df,
+    expenditures_df,
+) = dataframes_tuple
 
 ####Dashboard####
 app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
-
+ol.register_callbacks(app, data_container)
 
 server = app.server
 
@@ -133,9 +122,7 @@ app.layout = html.Div([dcc.Location(id="url"), sidebar, content, watermark])
 def render_page_content(pathname):
     path_mapping = {
         "/": welcome.render_page,
-        "/page-1": lambda: outsourcing_levels.render_page(
-            tab_style, tab_selected_style, tabs_styles
-        ),
+        "/page-1": lambda: ol.render_page(tab_style, tab_selected_style, tabs_styles),
         "/page-2": lambda: quality_impacts.render_page(
             tab_style, tab_selected_style, tabs_styles
         ),
@@ -161,145 +148,6 @@ def render_page_content(pathname):
         ],
         className="p-3 bg-light rounded-3",
     )
-
-
-@app.callback(
-    Output("page-1-tabs-content", "children"), [Input("page-1-tabs", "value")]
-)
-def render_page_1_content(tab):
-    if tab == "tab-1":
-        return html.Div(
-            [
-                html.H1("For-profit outsourcing of social care placements:"),
-                html.H3("Select a Local Authority"),
-                dcc.Dropdown(
-                    id="LA-dropdown",
-                    options=[
-                        {"label": hop, "value": hop}
-                        for hop in la_df[la_df["variable"] == "Private provision"][
-                            "LA_Name"
-                        ].unique()
-                    ],
-                    placeholder="All Local Authorities",
-                    value=None,
-                ),
-                dcc.Graph(id="scatter-plot"),
-            ]
-        )
-    elif tab == "tab-2":
-        return html.Div(
-            [
-                html.H1("For-profit outsourcing of social care spending:"),
-                html.Hr(),
-                html.H3("Select a Local Authority"),
-                dcc.Dropdown(
-                    id="LA-dropdown3",
-                    options=[
-                        {"label": hop, "value": hop}
-                        for hop in la_df[
-                            (la_df["category"] == "Expenditure")
-                            & (la_df["subcategory"] == "For_profit")
-                        ]["LA_Name"].unique()
-                    ],
-                    value=None,
-                    placeholder="All Local Authorities",
-                    style={"width": "600px", "margin-bottom": "20px"},
-                ),
-                html.H3("Select an area of expenditure"),
-                dcc.Dropdown(
-                    id="spend-dropdown",
-                    options=[
-                        {"label": hop, "value": hop}
-                        for hop in la_df[
-                            (la_df["category"] == "Expenditure")
-                            & (la_df["subcategory"] == "For_profit")
-                        ]["variable"].unique()
-                    ],
-                    value="Total Children Looked After",
-                    placeholder="Select an area of expenditure",
-                    style={"width": "600px", "margin-bottom": "20px"},
-                ),
-                dcc.Graph(id="scatter-plot2"),
-            ]
-        )
-    elif tab == "tab-3":
-        return html.Div(
-            [
-                html.H1("Number of active children's homes and available places"),
-                html.H3("Select a Local Authority"),
-                dcc.Dropdown(
-                    id="local-authority-dropdown",
-                    options=[
-                        {"label": la, "value": la}
-                        for la in nobs_final["Local.authority"].unique()
-                    ],
-                    value=nobs_final["Local.authority"].unique()[0],
-                ),
-                html.H3("Select Number of Homes or Places"),
-                dcc.Dropdown(
-                    id="homes-or-places-dropdown",
-                    options=[
-                        {"label": hop, "value": hop}
-                        for hop in nobs_final["Homes or places"].unique()
-                    ],
-                    value=nobs_final["Homes or places"].unique()[0],
-                ),
-                dcc.Graph(id="child-homes-plot"),
-                html.H6(
-                    "*Estimates based on the registration date of children's homes inspected since 2018"
-                ),
-            ]
-        )
-    elif tab == "tab-4":
-        return html.Div(
-            [
-                html.H1("Children's homes entering or leaving the market"),
-                html.H3("Exits or Entries"),
-                dcc.Dropdown(
-                    id="exit_entry_drop",
-                    options=[
-                        {"label": la, "value": la}
-                        for la in exitdata["leave_join"].unique()
-                    ],
-                    value="Entries",
-                ),
-                html.H3("Select a Local Authority"),
-                dcc.Dropdown(
-                    id="exit-local-authority-dropdown",
-                    options=[
-                        {"label": la, "value": la}
-                        for la in exitdata["Local.authority"].unique()
-                    ],
-                    value="All",
-                ),
-                html.H3("Select Number of Homes or Places"),
-                dcc.Dropdown(
-                    id="exit-homes-or-places-dropdown",
-                    options=[
-                        {"label": hop, "value": hop}
-                        for hop in exitdata["Homes_or_places"].unique()
-                    ],
-                    value=exitdata["Homes_or_places"].unique()[0],
-                ),
-                dcc.Graph(id="exits_entries_plot"),
-            ]
-        )
-    elif tab == "tab-5":
-        return html.Div(
-            [
-                html.H1("Outsourcing Geographies"),
-                html.H3("Select a measure of outsourcing"),
-                dcc.Dropdown(
-                    id="variable-dropdown",
-                    options=[
-                        {"label": la, "value": la}
-                        for la in merged2["variable"].unique()
-                    ],
-                    value=merged2["variable"].unique()[2],
-                ),
-                dcc.Graph(id="outsourcing-map", style={"height": "1000px"}),
-            ]
-        )
 
 
 @app.callback(
